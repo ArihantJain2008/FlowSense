@@ -15,6 +15,7 @@ model User {
   password  String
 
   expenses  Expense[]
+  budgets Budget[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,4 +36,18 @@ model Expense {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id        String   @id @default(uuid())
+
+  amount    Float
+
+  month     Int
+  year      Int
+
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
