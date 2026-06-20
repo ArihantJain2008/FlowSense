@@ -18,6 +18,8 @@ model User {
   budgets   Budget[]
   recurringExpenses RecurringExpense[]
   incomes   Income[]
+  savingsGoals SavingsGoal[]
+  savingsAllocationBatches SavingsAllocationBatch[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -80,6 +82,33 @@ model SavingsGoal {
 
   userId    String
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations SavingsAllocation[]
+}
+
+model SavingsAllocationBatch {
+  id             String   @id @default(uuid())
+  month          Int
+  year           Int
+  totalAllocated Float
+  createdAt      DateTime @default(now())
+
+  userId         String
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations    SavingsAllocation[]
+
+  @@unique([userId, month, year])
+}
+
+model SavingsAllocation {
+  id        String   @id @default(uuid())
+  amount    Float
+  createdAt DateTime @default(now())
+
+  goalId    String
+  goal      SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  batchId   String
+  batch     SavingsAllocationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
 }
 
 model Income {

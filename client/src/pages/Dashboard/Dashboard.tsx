@@ -2,6 +2,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { getAnalytics } from "../../services/analyticsService";
@@ -130,6 +131,10 @@ export default function Dashboard() {
       (sum, goal) =>
         sum + goal.saved,
       0
+    );
+  const activeGoals =
+    goals.filter(
+      (goal) => goal.saved < goal.target
     );
 
   return (
@@ -512,6 +517,70 @@ export default function Dashboard() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section
+        style={{
+          padding: "24px",
+          borderRadius: "24px",
+          background:
+            "linear-gradient(135deg, #f4ead6 0%, #fff8ec 100%)",
+          border: "1px solid #ece3d6",
+          display: "flex",
+          justifyContent:
+            "space-between",
+          gap: "16px",
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: 0,
+              color: "#6f6a61",
+            }}
+          >
+            Month-End Savings Allocation
+          </p>
+          <h2
+            style={{
+              margin: "10px 0 8px",
+            }}
+          >
+            {formatCurrency(
+              summary.remaining
+            )}{" "}
+            available
+          </h2>
+          <p
+            style={{
+              margin: 0,
+              color: "#6f6a61",
+            }}
+          >
+            {activeGoals.length} active
+            goal
+            {activeGoals.length === 1
+              ? ""
+              : "s"}{" "}
+            ready for month-end funding.
+          </p>
+        </div>
+
+        <Link
+          to="/savings-allocation"
+          style={{
+            textDecoration: "none",
+            padding: "12px 18px",
+            borderRadius: "12px",
+            background: "#1f433e",
+            color: "#fffaf1",
+            fontWeight: 700,
+          }}
+        >
+          Open Allocation Page
+        </Link>
       </section>
     </div>
   );

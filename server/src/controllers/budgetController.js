@@ -1,4 +1,7 @@
 const prisma = require("../lib/prisma");
+const {
+  getMonthlyBudgetSummary,
+} = require("../utils/budgetSummary");
 
 exports.setBudget = async (
   req,
@@ -91,45 +94,16 @@ exports.getCurrentBudget =
   exports.getBudgetSummary =
   async (req, res) => {
     try {
-      const now = new Date();
-
-      const month =
-        now.getMonth() + 1;
-
-      const year =
-        now.getFullYear();
-
-      const budget =
-        await prisma.budget.findFirst({
-          where: {
-            userId: req.user.id,
-            month,
-            year,
-          },
-        });
-
-      const expenses =
-        await prisma.expense.findMany({
-          where: {
-            userId: req.user.id,
-          },
-        });
-
-      const spent =
-        expenses.reduce(
-          (sum, expense) =>
-            sum + expense.amount,
-          0
-        );
-
-      const budgetAmount =
-        budget?.amount || 0;
-
-      const remaining =
-        budgetAmount - spent;
+      const {
+        budget,
+        spent,
+        remaining,
+      } = await getMonthlyBudgetSummary(
+        req.user.id
+      );
 
       res.json({
-        budget: budgetAmount,
+        budget,
         spent,
         remaining,
       });

@@ -27,6 +27,10 @@ const links = [
     to: "/savings",
     label: "Savings Goals",
   },
+  {
+    to: "/savings-allocation",
+    label: "Savings Allocation",
+  },
 ];
 
 export default function Layout() {

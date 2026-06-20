@@ -16,6 +16,9 @@ const budgetRoutes =
   const savingsGoalRoutes =
   require("./routes/savingsGoalRoutes");
 
+  const savingsAllocationRoutes =
+  require("./routes/savingsAllocationRoutes");
+
   const incomeRoutes =
   require("./routes/incomeRoutes");
 
@@ -39,6 +42,11 @@ app.use(
 app.use(
   "/api/savings-goals",
   savingsGoalRoutes
+);
+
+app.use(
+  "/api/savings-allocation",
+  savingsAllocationRoutes
 );
 
 app.use(

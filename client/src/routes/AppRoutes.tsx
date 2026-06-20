@@ -10,6 +10,7 @@ import Register from "../pages/Auth/Register";
 import Analytics from "../pages/Analytics/Analytics";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Expenses from "../pages/Expenses/Expenses";
+import SavingsAllocation from "../pages/SavingsAllocation/SavingsAllocation";
 import SavingsGoals from "../pages/SavingsGoals/SavingsGoals";
 import Subscriptions from "../pages/Subscriptions/Subscriptions";
 import ProtectedRoute from "./ProtectedRoute";
@@ -58,6 +59,11 @@ export default function AppRoutes() {
           <Route
             path="/savings"
             element={<SavingsGoals />}
+          />
+
+          <Route
+            path="/savings-allocation"
+            element={<SavingsAllocation />}
           />
         </Route>
       </Routes>

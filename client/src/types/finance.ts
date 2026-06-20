@@ -23,3 +23,15 @@ export interface SavingsGoal {
   target: number;
   saved: number;
 }
+
+export interface SavingsAllocationSummary {
+  budget: number;
+  spent: number;
+  remaining: number;
+  goals: SavingsGoal[];
+}
+
+export interface GoalAllocationInput {
+  goalId: string;
+  amount: number;
+}
