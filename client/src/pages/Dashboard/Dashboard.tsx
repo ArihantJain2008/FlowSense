@@ -28,6 +28,11 @@ import {
   deleteRecurringExpense,
 } from "../../services/recurringExpenseService";
 
+import {
+  getGoals,
+  createGoal,
+} from "../../services/savingsGoalService";
+
 interface BudgetSummary {
   budget: number;
   spent: number;
@@ -45,6 +50,13 @@ interface RecurringExpense {
   amount: number;
   category: string;
   frequency: string;
+}
+
+interface SavingsGoal {
+  id: string;
+  title: string;
+  target: number;
+  saved: number;
 }
 
 export default function Dashboard() {
@@ -88,6 +100,9 @@ export default function Dashboard() {
     const recurringData =
       await getRecurringExpenses();
 
+    const goalsData =
+      await getGoals();
+
     setExpenses(expensesData);
 
     setSummary(summaryData);
@@ -99,6 +114,8 @@ export default function Dashboard() {
     setRecurringExpenses(
       recurringData
     );
+
+    setGoals(goalsData);
   } catch (error) {
     console.error(error);
   }
@@ -130,6 +147,21 @@ const [
   recurringFrequency,
   setRecurringFrequency,
 ] = useState("Monthly");
+
+const [goals, setGoals] =
+  useState<SavingsGoal[]>([]);
+
+const [goalTitle,
+  setGoalTitle] =
+  useState("");
+
+const [goalTarget,
+  setGoalTarget] =
+  useState("");
+
+const [goalSaved,
+  setGoalSaved] =
+  useState("");
 
   useEffect(() => {
     loadData();
@@ -221,6 +253,32 @@ const [
       await deleteRecurringExpense(
         id
       );
+
+      await loadData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCreateGoal =
+  async () => {
+    try {
+      if (
+        !goalTitle ||
+        !goalTarget
+      ) {
+        return;
+      }
+
+      await createGoal({
+        title: goalTitle,
+        target: Number(
+          goalTarget
+        ),
+      });
+
+      setGoalTitle("");
+      setGoalTarget("");
 
       await loadData();
     } catch (error) {
@@ -609,6 +667,89 @@ const [
     </div>
   )
 )}
+
+<hr />
+
+<h2>
+  Savings Goals
+</h2>
+
+<input
+  placeholder="Gaming PC"
+  value={goalTitle}
+  onChange={(e) =>
+    setGoalTitle(
+      e.target.value
+    )
+  }
+/>
+
+<br />
+<br />
+
+<input
+  type="number"
+  placeholder="Target Amount"
+  value={goalTarget}
+  onChange={(e) =>
+    setGoalTarget(
+      e.target.value
+    )
+  }
+/>
+
+<br />
+<br />
+
+<button
+  onClick={
+    handleCreateGoal
+  }
+>
+  Create Goal
+</button>
+
+<hr />
+
+{goals.map((goal) => {
+  const goalProgress =
+    goal.target > 0
+      ? (
+          goal.saved /
+          goal.target
+        ) *
+        100
+      : 0;
+
+  return (
+    <div
+      key={goal.id}
+      style={{
+        border:
+          "1px solid #ccc",
+        padding: "10px",
+        marginBottom:
+          "10px",
+      }}
+    >
+      <h3>
+        {goal.title}
+      </h3>
+
+      <p>
+        ₹{goal.saved} /
+        ₹{goal.target}
+      </p>
+
+      <p>
+        {goalProgress.toFixed(
+          1
+        )}
+        % Complete
+      </p>
+    </div>
+  );
+})}
     </div>
   );
 }
