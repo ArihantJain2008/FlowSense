@@ -7,11 +7,17 @@ const {
   getExpenses,
   updateExpense,
   deleteExpense,
+  getAnalytics
 } = require("../controllers/expenseController");
 
 const { protect } = require("../middleware/authMiddleware");
 
 router.use(protect);
+
+router.get(
+  "/analytics",
+  getAnalytics
+);
 
 router.route("/")
   .post(createExpense)

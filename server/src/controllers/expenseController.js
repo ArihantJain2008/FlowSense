@@ -81,9 +81,52 @@ const deleteExpense = async (req, res) => {
   }
 };
 
+const getAnalytics =
+  async (req, res) => {
+    try {
+      const expenses =
+        await prisma.expense.findMany({
+          where: {
+            userId: req.user.id,
+          },
+        });
+
+      const categoryMap = {};
+
+      expenses.forEach(
+        (expense) => {
+          categoryMap[
+            expense.category
+          ] =
+            (categoryMap[
+              expense.category
+            ] || 0) +
+            expense.amount;
+        }
+      );
+
+      const analytics =
+        Object.entries(
+          categoryMap
+        ).map(
+          ([category, amount]) => ({
+            category,
+            amount,
+          })
+        );
+
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
+
 module.exports = {
   createExpense,
   getExpenses,
   updateExpense,
   deleteExpense,
+  getAnalytics
 };

@@ -14,6 +14,12 @@ import {
   setBudget,
 } from "../../services/budgetService";
 
+import {
+  getAnalytics,
+} from "../../services/analyticsService";
+
+import AnalyticsChart from "../../components/AnalyticsChart";
+
 import type { Expense } from "../../types/expense";
 
 interface BudgetSummary {
@@ -22,9 +28,17 @@ interface BudgetSummary {
   remaining: number;
 }
 
+interface AnalyticsItem {
+  category: string;
+  amount: number;
+}
+
 export default function Dashboard() {
   const [expenses, setExpenses] =
     useState<Expense[]>([]);
+
+  const [analytics, setAnalytics] =
+    useState<AnalyticsItem[]>([]);
 
   const [summary, setSummary] =
     useState<BudgetSummary>({
@@ -54,8 +68,16 @@ export default function Dashboard() {
       const summaryData =
         await getBudgetSummary();
 
+      const analyticsData =
+        await getAnalytics();
+
       setExpenses(expensesData);
+
       setSummary(summaryData);
+
+      setAnalytics(
+        analyticsData
+      );
     } catch (error) {
       console.error(error);
     }
@@ -297,6 +319,16 @@ export default function Dashboard() {
       <hr />
 
       <h2>
+        Spending Analytics
+      </h2>
+
+      <AnalyticsChart
+        data={analytics}
+      />
+
+      <hr />
+
+      <h2>
         Recent Expenses
       </h2>
 
@@ -325,16 +357,12 @@ export default function Dashboard() {
 
               <p>
                 Amount: ₹
-                {
-                  expense.amount
-                }
+                {expense.amount}
               </p>
 
               <p>
                 Category:{" "}
-                {
-                  expense.category
-                }
+                {expense.category}
               </p>
 
               <button
