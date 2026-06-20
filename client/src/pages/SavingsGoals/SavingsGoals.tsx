@@ -3,42 +3,123 @@ import {
   useEffect,
   useState,
 } from "react";
+import {
+  allocateSavings,
+  getSavingsAllocationSummary,
+} from "../../services/savingsAllocationService";
 
 import {
   createGoal,
-  getGoals,
 } from "../../services/savingsGoalService";
-import type { SavingsGoal } from "../../types/finance";
+import type {
+  GoalAllocationInput,
+  SavingsAllocationSummary,
+  SavingsGoal,
+} from "../../types/finance";
 import {
   formatCurrency,
   getGoalProgress,
 } from "../../utils/finance";
 
+const emptySummary: SavingsAllocationSummary =
+  {
+    budget: 0,
+    spent: 0,
+    remaining: 0,
+    goals: [],
+  };
+
 export default function SavingsGoals() {
-  const [goals, setGoals] =
-    useState<SavingsGoal[]>([]);
+  const [summary, setSummary] =
+    useState<SavingsAllocationSummary>(
+      emptySummary
+    );
   const [goalTitle, setGoalTitle] =
     useState("");
   const [goalTarget, setGoalTarget] =
     useState("");
+  const [allocations, setAllocations] =
+    useState<Record<string, string>>(
+      {}
+    );
   const [loading, setLoading] =
     useState(true);
+  const [creatingGoal, setCreatingGoal] =
+    useState(false);
+  const [submittingGoalId, setSubmittingGoalId] =
+    useState<string | null>(null);
+  const [error, setError] =
+    useState("");
+  const [success, setSuccess] =
+    useState("");
 
-  const loadGoals = async () => {
+  const loadSavingsData = async () => {
     try {
-      const goalsData =
-        await getGoals();
-      setGoals(goalsData);
+      setError("");
+      const summaryData =
+        await getSavingsAllocationSummary();
+      setSummary(summaryData);
     } catch (error) {
-      console.error(error);
+      setError(
+        getErrorMessage(error)
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadGoals();
+    loadSavingsData();
   }, []);
+
+  const goals = summary.goals;
+
+  const handleAllocationChange = (
+    goalId: string,
+    value: string
+  ) => {
+    setError("");
+    setSuccess("");
+
+    if (
+      value !== "" &&
+      Number(value) < 0
+    ) {
+      return;
+    }
+
+    setAllocations((current) => ({
+      ...current,
+      [goalId]: value,
+    }));
+  };
+
+  const validateAllocation = (
+    goal: SavingsGoal,
+    amount: number
+  ) => {
+    if (
+      Number.isNaN(amount) ||
+      amount <= 0
+    ) {
+      return "Allocation amount must be positive";
+    }
+
+    if (amount > summary.remaining) {
+      return "Allocation cannot exceed remaining budget";
+    }
+
+    const remainingGoalAmount =
+      goal.target - goal.saved;
+
+    if (amount > remainingGoalAmount) {
+      return `${goal.title} only needs ${formatCurrency(
+        remainingGoalAmount
+      )} more`;
+    }
+
+    return "";
+  };
 
   const handleCreateGoal =
     async () => {
@@ -47,6 +128,10 @@ export default function SavingsGoals() {
       }
 
       try {
+        setCreatingGoal(true);
+        setError("");
+        setSuccess("");
+
         await createGoal({
           title: goalTitle,
           target: Number(
@@ -56,12 +141,70 @@ export default function SavingsGoals() {
 
         setGoalTitle("");
         setGoalTarget("");
+        setSuccess(
+          "Savings goal created successfully."
+        );
 
-        await loadGoals();
+        await loadSavingsData();
       } catch (error) {
-        console.error(error);
+        setError(
+          getErrorMessage(error)
+        );
+      } finally {
+        setCreatingGoal(false);
       }
     };
+
+  const handleAllocate = async (
+    goal: SavingsGoal
+  ) => {
+    const amount = Number(
+      allocations[goal.id] || 0
+    );
+
+    const validationMessage =
+      validateAllocation(goal, amount);
+
+    if (validationMessage) {
+      setError(validationMessage);
+      setSuccess("");
+      return;
+    }
+
+    try {
+      setSubmittingGoalId(goal.id);
+      setError("");
+      setSuccess("");
+
+      const payload: GoalAllocationInput[] =
+        [
+          {
+            goalId: goal.id,
+            amount,
+          },
+        ];
+
+      await allocateSavings(payload);
+
+      setAllocations((current) => ({
+        ...current,
+        [goal.id]: "",
+      }));
+      setSuccess(
+        `${formatCurrency(
+          amount
+        )} allocated to ${goal.title}.`
+      );
+
+      await loadSavingsData();
+    } catch (error) {
+      setError(
+        getErrorMessage(error)
+      );
+    } finally {
+      setSubmittingGoalId(null);
+    }
+  };
 
   return (
     <div
@@ -85,8 +228,70 @@ export default function SavingsGoals() {
           Create targets, watch your
           progress build, and keep
           longer-term purchases grounded
-          in real numbers.
+          in real numbers while using
+          leftover monthly budget to
+          fund them from the same page.
         </p>
+      </section>
+
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "16px",
+        }}
+      >
+        {[
+          {
+            label: "Monthly budget",
+            value: formatCurrency(
+              summary.budget
+            ),
+          },
+          {
+            label: "Spent this month",
+            value: formatCurrency(
+              summary.spent
+            ),
+          },
+          {
+            label: "Remaining budget",
+            value: formatCurrency(
+              summary.remaining
+            ),
+          },
+        ].map((card) => (
+          <article
+            key={card.label}
+            style={{
+              padding: "20px",
+              borderRadius: "20px",
+              background: "#ffffff",
+              border:
+                "1px solid #ece3d6",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                color: "#6f6a61",
+              }}
+            >
+              {card.label}
+            </p>
+
+            <h2
+              style={{
+                margin: "10px 0 0",
+              }}
+            >
+              {loading
+                ? "Loading..."
+                : card.value}
+            </h2>
+          </article>
+        ))}
       </section>
 
       <section
@@ -140,9 +345,20 @@ export default function SavingsGoals() {
           onClick={
             handleCreateGoal
           }
-          style={buttonStyle}
+          disabled={creatingGoal}
+          style={{
+            ...buttonStyle,
+            opacity: creatingGoal
+              ? 0.7
+              : 1,
+            cursor: creatingGoal
+              ? "not-allowed"
+              : "pointer",
+          }}
         >
-          Create Goal
+          {creatingGoal
+            ? "Creating..."
+            : "Create Goal"}
         </button>
       </section>
 
@@ -152,6 +368,28 @@ export default function SavingsGoals() {
         >
           Goal listing
         </h2>
+
+        {error ? (
+          <p
+            style={{
+              color: "#8b3024",
+              marginTop: 0,
+            }}
+          >
+            {error}
+          </p>
+        ) : null}
+
+        {success ? (
+          <p
+            style={{
+              color: "#1f6a41",
+              marginTop: 0,
+            }}
+          >
+            {success}
+          </p>
+        ) : null}
 
         {loading ? (
           <p>Loading goals...</p>
@@ -219,12 +457,34 @@ export default function SavingsGoals() {
                       </p>
                     </div>
 
-                    <strong>
-                      {progress.toFixed(
-                        1
-                      )}
-                      % complete
-                    </strong>
+                    <div
+                      style={{
+                        minWidth:
+                          "180px",
+                      }}
+                    >
+                      <strong>
+                        {progress.toFixed(
+                          1
+                        )}
+                        % complete
+                      </strong>
+
+                      <p
+                        style={{
+                          margin:
+                            "8px 0 0",
+                          color:
+                            "#6f6a61",
+                        }}
+                      >
+                        {formatCurrency(
+                          goal.target -
+                            goal.saved
+                        )}{" "}
+                        still needed
+                      </p>
+                    </div>
                   </div>
 
                   <div
@@ -247,6 +507,103 @@ export default function SavingsGoals() {
                           "linear-gradient(90deg, #1f433e 0%, #8fc09b 100%)",
                       }}
                     />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "minmax(0, 1fr) auto",
+                      gap: "12px",
+                      alignItems:
+                        "center",
+                      marginTop: "16px",
+                    }}
+                  >
+                    <input
+                      type="number"
+                      min="0"
+                      max={
+                        goal.target -
+                        goal.saved
+                      }
+                      placeholder={
+                        goal.saved <
+                        goal.target
+                          ? "Allocation amount"
+                          : "Goal completed"
+                      }
+                      value={
+                        allocations[
+                          goal.id
+                        ] || ""
+                      }
+                      onChange={(event) =>
+                        handleAllocationChange(
+                          goal.id,
+                          event.target.value
+                        )
+                      }
+                      disabled={
+                        goal.saved >=
+                        goal.target
+                      }
+                      style={{
+                        ...inputStyle,
+                        width: "100%",
+                        boxSizing:
+                          "border-box",
+                        opacity:
+                          goal.saved >=
+                          goal.target
+                            ? 0.7
+                            : 1,
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAllocate(
+                          goal
+                        )
+                      }
+                      disabled={
+                        submittingGoalId ===
+                          goal.id ||
+                        summary.remaining <=
+                          0 ||
+                        goal.saved >=
+                          goal.target
+                      }
+                      style={{
+                        ...buttonStyle,
+                        marginTop: 0,
+                        opacity:
+                          submittingGoalId ===
+                            goal.id ||
+                          summary.remaining <=
+                            0 ||
+                          goal.saved >=
+                            goal.target
+                            ? 0.7
+                            : 1,
+                        cursor:
+                          submittingGoalId ===
+                            goal.id ||
+                          summary.remaining <=
+                            0 ||
+                          goal.saved >=
+                            goal.target
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {submittingGoalId ===
+                      goal.id
+                        ? "Allocating..."
+                        : "Allocate"}
+                    </button>
                   </div>
                 </article>
               );
@@ -275,3 +632,29 @@ const buttonStyle = {
   fontWeight: 700,
   cursor: "pointer",
 } satisfies CSSProperties;
+
+function getErrorMessage(
+  error: unknown
+) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error
+  ) {
+    const response = error as {
+      response?: {
+        data?: {
+          message?: string;
+        };
+      };
+    };
+
+    return (
+      response.response?.data
+        ?.message ||
+      "Something went wrong while updating savings goals"
+    );
+  }
+
+  return "Something went wrong while updating savings goals";
+}

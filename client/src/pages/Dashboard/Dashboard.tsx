@@ -569,7 +569,7 @@ export default function Dashboard() {
         </div>
 
         <Link
-          to="/savings-allocation"
+          to="/savings"
           style={{
             textDecoration: "none",
             padding: "12px 18px",
@@ -579,7 +579,7 @@ export default function Dashboard() {
             fontWeight: 700,
           }}
         >
-          Open Allocation Page
+          Open Savings Goals
         </Link>
       </section>
     </div>
