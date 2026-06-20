@@ -3,753 +3,516 @@ import {
   useState,
 } from "react";
 
-import {
-  getExpenses,
-  createExpense,
-  deleteExpense,
-} from "../../services/expenseService";
-
+import { useAuth } from "../../context/AuthContext";
+import { getAnalytics } from "../../services/analyticsService";
 import {
   getBudgetSummary,
   setBudget,
 } from "../../services/budgetService";
-
-import {
-  getAnalytics,
-} from "../../services/analyticsService";
-
-import AnalyticsChart from "../../components/AnalyticsChart";
-
+import { getExpenses } from "../../services/expenseService";
+import { getGoals } from "../../services/savingsGoalService";
+import { getRecurringExpenses } from "../../services/recurringExpenseService";
 import type { Expense } from "../../types/expense";
-
+import type {
+  AnalyticsItem,
+  BudgetSummary,
+  RecurringExpense,
+  SavingsGoal,
+} from "../../types/finance";
 import {
-  getRecurringExpenses,
-  createRecurringExpense,
-  deleteRecurringExpense,
-} from "../../services/recurringExpenseService";
+  formatCurrency,
+  getBudgetProgress,
+  getTopCategory,
+} from "../../utils/finance";
 
-import {
-  getGoals,
-  createGoal,
-} from "../../services/savingsGoalService";
-
-interface BudgetSummary {
-  budget: number;
-  spent: number;
-  remaining: number;
-}
-
-interface AnalyticsItem {
-  category: string;
-  amount: number;
-}
-
-interface RecurringExpense {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  frequency: string;
-}
-
-interface SavingsGoal {
-  id: string;
-  title: string;
-  target: number;
-  saved: number;
-}
-
-export default function Dashboard() {
-  const [expenses, setExpenses] =
-    useState<Expense[]>([]);
-
-  const [analytics, setAnalytics] =
-    useState<AnalyticsItem[]>([]);
-
-  const [summary, setSummary] =
-    useState<BudgetSummary>({
-      budget: 0,
-      spent: 0,
-      remaining: 0,
-    });
-
-  const [budgetAmount,
-    setBudgetAmount] =
-    useState("");
-
-  const [title, setTitle] =
-    useState("");
-
-  const [amount, setAmount] =
-    useState("");
-
-  const [category, setCategory] =
-    useState("");
-
-  const loadData = async () => {
-  try {
-    const expensesData =
-      await getExpenses();
-
-    const summaryData =
-      await getBudgetSummary();
-
-    const analyticsData =
-      await getAnalytics();
-
-    const recurringData =
-      await getRecurringExpenses();
-
-    const goalsData =
-      await getGoals();
-
-    setExpenses(expensesData);
-
-    setSummary(summaryData);
-
-    setAnalytics(
-      analyticsData
-    );
-
-    setRecurringExpenses(
-      recurringData
-    );
-
-    setGoals(goalsData);
-  } catch (error) {
-    console.error(error);
-  }
+const emptySummary: BudgetSummary = {
+  budget: 0,
+  spent: 0,
+  remaining: 0,
 };
 
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [summary, setSummary] =
+    useState<BudgetSummary>(
+      emptySummary
+    );
+  const [analytics, setAnalytics] =
+    useState<AnalyticsItem[]>([]);
+  const [expenses, setExpenses] =
+    useState<Expense[]>([]);
   const [
-  recurringExpenses,
-  setRecurringExpenses,
-] = useState<
-  RecurringExpense[]
->([]);
-
-const [
-  recurringTitle,
-  setRecurringTitle,
-] = useState("");
-
-const [
-  recurringAmount,
-  setRecurringAmount,
-] = useState("");
-
-const [
-  recurringCategory,
-  setRecurringCategory,
-] = useState("");
-
-const [
-  recurringFrequency,
-  setRecurringFrequency,
-] = useState("Monthly");
-
-const [goals, setGoals] =
-  useState<SavingsGoal[]>([]);
-
-const [goalTitle,
-  setGoalTitle] =
-  useState("");
-
-const [goalTarget,
-  setGoalTarget] =
-  useState("");
-
-const [goalSaved,
-  setGoalSaved] =
-  useState("");
+    recurringExpenses,
+    setRecurringExpenses,
+  ] = useState<RecurringExpense[]>(
+    []
+  );
+  const [goals, setGoals] =
+    useState<SavingsGoal[]>([]);
+  const [budgetAmount, setBudgetAmount] =
+    useState("");
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    loadData();
+    const loadDashboard = async () => {
+      try {
+        const [
+          summaryData,
+          analyticsData,
+          expensesData,
+          recurringData,
+          goalsData,
+        ] = await Promise.all([
+          getBudgetSummary(),
+          getAnalytics(),
+          getExpenses(),
+          getRecurringExpenses(),
+          getGoals(),
+        ]);
+
+        setSummary(summaryData);
+        setAnalytics(analyticsData);
+        setExpenses(expensesData);
+        setRecurringExpenses(
+          recurringData
+        );
+        setGoals(goalsData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
   }, []);
 
   const handleSetBudget =
     async () => {
-      try {
-        if (!budgetAmount) return;
+      if (!budgetAmount) {
+        return;
+      }
 
+      try {
         await setBudget(
           Number(budgetAmount)
         );
 
+        const summaryData =
+          await getBudgetSummary();
+
+        setSummary(summaryData);
         setBudgetAmount("");
-
-        await loadData();
       } catch (error) {
         console.error(error);
       }
     };
-
-  const handleAddExpense =
-    async () => {
-      try {
-        if (
-          !title ||
-          !amount ||
-          !category
-        ) {
-          return;
-        }
-
-        await createExpense({
-          title,
-          amount: Number(amount),
-          category,
-        });
-
-        setTitle("");
-        setAmount("");
-        setCategory("");
-
-        await loadData();
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-  const handleDelete =
-    async (id: string) => {
-      try {
-        await deleteExpense(id);
-
-        await loadData();
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    const handleAddRecurring =
-  async () => {
-    try {
-      await createRecurringExpense({
-        title:
-          recurringTitle,
-        amount: Number(
-          recurringAmount
-        ),
-        category:
-          recurringCategory,
-        frequency:
-          recurringFrequency,
-      });
-
-      setRecurringTitle("");
-      setRecurringAmount("");
-      setRecurringCategory("");
-
-      await loadData();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleDeleteRecurring =
-  async (id: string) => {
-    try {
-      await deleteRecurringExpense(
-        id
-      );
-
-      await loadData();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleCreateGoal =
-  async () => {
-    try {
-      if (
-        !goalTitle ||
-        !goalTarget
-      ) {
-        return;
-      }
-
-      await createGoal({
-        title: goalTitle,
-        target: Number(
-          goalTarget
-        ),
-      });
-
-      setGoalTitle("");
-      setGoalTarget("");
-
-      await loadData();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const totalSubscriptions =
-  recurringExpenses.reduce(
-    (sum, item) =>
-      sum + item.amount,
-    0
-  );
 
   const progress =
-    summary.budget > 0
-      ? Math.min(
-          (summary.spent /
-            summary.budget) *
-            100,
-          100
-        )
-      : 0;
+    getBudgetProgress(summary);
+  const totalSubscriptions =
+    recurringExpenses.reduce(
+      (sum, item) =>
+        sum + item.amount,
+      0
+    );
+  const topCategory =
+    getTopCategory(analytics);
+  const totalGoalTarget =
+    goals.reduce(
+      (sum, goal) =>
+        sum + goal.target,
+      0
+    );
+  const totalSaved =
+    goals.reduce(
+      (sum, goal) =>
+        sum + goal.saved,
+      0
+    );
 
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "20px",
+        display: "grid",
+        gap: "24px",
       }}
     >
-      <h1>FlowSense Dashboard</h1>
-
-      <hr />
-
-      <h2>Set Monthly Budget</h2>
-
-      <input
-        type="number"
-        placeholder="Budget Amount"
-        value={budgetAmount}
-        onChange={(e) =>
-          setBudgetAmount(
-            e.target.value
-          )
-        }
-      />
-
-      <button
-        onClick={
-          handleSetBudget
-        }
-      >
-        Save Budget
-      </button>
-
-      <hr />
-
-      <h2>Monthly Summary</h2>
-
-      <p>
-        Budget: ₹
-        {summary.budget}
-      </p>
-
-      <p>
-        Spent: ₹
-        {summary.spent}
-      </p>
-
-      <p>
-        Remaining: ₹
-        {summary.remaining}
-      </p>
-
-      <div
+      <section
         style={{
-          width: "100%",
-          height: "20px",
-          background: "#ddd",
-          borderRadius: "10px",
-          overflow: "hidden",
-          marginBottom: "20px",
+          padding: "28px",
+          borderRadius: "24px",
+          background:
+            "linear-gradient(135deg, #1e433d 0%, #2d5a53 100%)",
+          color: "#f7f3ea",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            opacity: 0.8,
+          }}
+        >
+          Welcome back
+        </p>
+
+        <h1
+          style={{
+            margin:
+              "8px 0 12px",
+            fontSize:
+              "clamp(2rem, 4vw, 3rem)",
+          }}
+        >
+          {user?.name ?? "FlowSense user"}
+        </h1>
+
+        <p
+          style={{
+            maxWidth: "680px",
+            lineHeight: 1.6,
+            marginBottom: "24px",
+          }}
+        >
+          Keep your monthly plan visible,
+          stay ahead of recurring costs,
+          and track progress toward your
+          savings goals from one place.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <input
+            type="number"
+            placeholder="Update monthly budget"
+            value={budgetAmount}
+            onChange={(event) =>
+              setBudgetAmount(
+                event.target.value
+              )
+            }
+            style={{
+              flex: "1 1 240px",
+              padding:
+                "12px 14px",
+              borderRadius:
+                "12px",
+              border: "none",
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={
+              handleSetBudget
+            }
+            style={{
+              padding:
+                "12px 18px",
+              borderRadius:
+                "12px",
+              border: "none",
+              background:
+                "#f2dfc1",
+              color: "#16302c",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Save Budget
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h2
+          style={{
+            marginBottom: "16px",
+          }}
+        >
+          Budget summary
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          {[
+            {
+              label: "Budget",
+              value: formatCurrency(
+                summary.budget
+              ),
+            },
+            {
+              label: "Spent",
+              value: formatCurrency(
+                summary.spent
+              ),
+            },
+            {
+              label: "Remaining",
+              value: formatCurrency(
+                summary.remaining
+              ),
+            },
+            {
+              label: "Subscription load",
+              value: formatCurrency(
+                totalSubscriptions
+              ),
+            },
+          ].map((card) => (
+            <article
+              key={card.label}
+              style={{
+                padding: "20px",
+                borderRadius: "20px",
+                background: "#ffffff",
+                border:
+                  "1px solid #ece3d6",
+                boxShadow:
+                  "0 12px 30px rgba(24, 51, 47, 0.08)",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6f6a61",
+                }}
+              >
+                {card.label}
+              </p>
+
+              <h3
+                style={{
+                  margin:
+                    "10px 0 0",
+                  fontSize: "1.75rem",
+                }}
+              >
+                {loading
+                  ? "Loading..."
+                  : card.value}
+              </h3>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        style={{
+          padding: "24px",
+          borderRadius: "24px",
+          background: "#fffaf1",
+          border: "1px solid #ece3d6",
         }}
       >
         <div
           style={{
-            width: `${progress}%`,
-            height: "100%",
-            background: "#22c55e",
+            display: "flex",
+            justifyContent:
+              "space-between",
+            gap: "16px",
+            flexWrap: "wrap",
+            marginBottom: "16px",
           }}
-        />
-      </div>
-
-      <p>
-        {progress.toFixed(1)}%
-        Used
-      </p>
-
-      <hr />
-
-      <h2>Add Expense</h2>
-
-      <input
-        type="text"
-        placeholder="Title"
-        value={title}
-        onChange={(e) =>
-          setTitle(
-            e.target.value
-          )
-        }
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="number"
-        placeholder="Amount"
-        value={amount}
-        onChange={(e) =>
-          setAmount(
-            e.target.value
-          )
-        }
-      />
-
-      <br />
-      <br />
-
-      <select
-        value={category}
-        onChange={(e) =>
-          setCategory(
-            e.target.value
-          )
-        }
-      >
-        <option value="">
-          Select Category
-        </option>
-
-        <option value="Food">
-          Food
-        </option>
-
-        <option value="Transport">
-          Transport
-        </option>
-
-        <option value="Shopping">
-          Shopping
-        </option>
-
-        <option value="Bills">
-          Bills
-        </option>
-
-        <option value="Entertainment">
-          Entertainment
-        </option>
-
-        <option value="Health">
-          Health
-        </option>
-
-        <option value="Education">
-          Education
-        </option>
-
-        <option value="Other">
-          Other
-        </option>
-      </select>
-
-      <br />
-      <br />
-
-      <button
-        onClick={
-          handleAddExpense
-        }
-      >
-        Add Expense
-      </button>
-
-      <hr />
-
-<h2>
-        Recent Expenses
-      </h2>
-
-      {expenses.length === 0 ? (
-        <p>
-          No expenses found
-        </p>
-      ) : (
-        expenses.map(
-          (expense) => (
-            <div
-              key={expense.id}
+        >
+          <div>
+            <h2
               style={{
-                border:
-                  "1px solid #ccc",
-                padding: "10px",
-                marginBottom:
-                  "10px",
-                borderRadius:
-                  "8px",
+                margin:
+                  "0 0 6px",
               }}
             >
-              <h3>
-                {expense.title}
-              </h3>
+              Monthly overview
+            </h2>
 
-              <p>
-                Amount: ₹
-                {expense.amount}
-              </p>
+            <p
+              style={{
+                margin: 0,
+                color: "#6f6a61",
+              }}
+            >
+              Track how much of your
+              plan is already spoken
+              for this month.
+            </p>
+          </div>
 
-              <p>
-                Category:{" "}
-                {expense.category}
-              </p>
+          <strong>
+            {progress.toFixed(1)}% used
+          </strong>
+        </div>
 
-              <button
-                onClick={() =>
-                  handleDelete(
-                    expense.id
-                  )
-                }
+        <div
+          style={{
+            width: "100%",
+            height: "16px",
+            borderRadius: "999px",
+            overflow: "hidden",
+            background: "#eadfce",
+            marginBottom: "16px",
+          }}
+        >
+          <div
+            style={{
+              width: `${progress}%`,
+              height: "100%",
+              background:
+                "linear-gradient(90deg, #2d5a53 0%, #79a68c 100%)",
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "12px",
+            color: "#3f3a33",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                margin: 0,
+                color: "#6f6a61",
+              }}
+            >
+              Monthly spent
+            </p>
+            <strong>
+              {formatCurrency(
+                summary.spent
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <p
+              style={{
+                margin: 0,
+                color: "#6f6a61",
+              }}
+            >
+              Left to spend
+            </p>
+            <strong>
+              {formatCurrency(
+                summary.remaining
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <p
+              style={{
+                margin: 0,
+                color: "#6f6a61",
+              }}
+            >
+              Top category
+            </p>
+            <strong>
+              {topCategory
+                ? `${topCategory.category} (${formatCurrency(
+                    topCategory.amount
+                  )})`
+                : "No data yet"}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2
+          style={{
+            marginBottom: "16px",
+          }}
+        >
+          Quick stats
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          {[
+            {
+              label: "Expense entries",
+              value: `${expenses.length}`,
+            },
+            {
+              label: "Active subscriptions",
+              value: `${recurringExpenses.length}`,
+            },
+            {
+              label: "Savings goals",
+              value: `${goals.length}`,
+            },
+            {
+              label: "Saved toward goals",
+              value:
+                totalGoalTarget > 0
+                  ? `${formatCurrency(
+                      totalSaved
+                    )} of ${formatCurrency(
+                      totalGoalTarget
+                    )}`
+                  : "No goals yet",
+            },
+          ].map((item) => (
+            <article
+              key={item.label}
+              style={{
+                padding: "20px",
+                borderRadius: "20px",
+                background: "#ffffff",
+                border:
+                  "1px solid #ece3d6",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  color: "#6f6a61",
+                }}
               >
-                Delete
-              </button>
-            </div>
-          )
-        )
-      )}
+                {item.label}
+              </p>
 
-      <h2>
-        Spending Analytics
-      </h2>
-
-<p>
-  Monthly Subscription Cost:
-  ₹
-  {
-    totalSubscriptions
-  }
-</p>
-
-      <AnalyticsChart
-        data={analytics}
-      />
-
-      <hr />
-
-      <hr />
-
-<h2>
-  Subscription Tracker
-</h2>
-
-<input
-  placeholder="Netflix"
-  value={recurringTitle}
-  onChange={(e) =>
-    setRecurringTitle(
-      e.target.value
-    )
-  }
-/>
-
-<br />
-<br />
-
-<input
-  type="number"
-  placeholder="Amount"
-  value={recurringAmount}
-  onChange={(e) =>
-    setRecurringAmount(
-      e.target.value
-    )
-  }
-/>
-
-<br />
-<br />
-
-<select
-  value={recurringCategory}
-  onChange={(e) =>
-    setRecurringCategory(
-      e.target.value
-    )
-  }
->
-  <option value="">
-    Category
-  </option>
-
-  <option value="Entertainment">
-    Entertainment
-  </option>
-
-  <option value="Health">
-    Health
-  </option>
-
-  <option value="Bills">
-    Bills
-  </option>
-
-  <option value="Other">
-    Other
-  </option>
-</select>
-
-<br />
-<br />
-
-<select
-  value={recurringFrequency}
-  onChange={(e) =>
-    setRecurringFrequency(
-      e.target.value
-    )
-  }
->
-  <option value="Monthly">
-    Monthly
-  </option>
-
-  <option value="Yearly">
-    Yearly
-  </option>
-</select>
-
-<br />
-<br />
-
-<button
-  onClick={
-    handleAddRecurring
-  }
->
-  Add Subscription
-</button>
-
-<hr />
-
-{recurringExpenses.map(
-  (subscription) => (
-    <div
-      key={subscription.id}
-    >
-      <h4>
-        {
-          subscription.title
-        }
-      </h4>
-
-      <p>
-        ₹
-        {
-          subscription.amount
-        }
-        /
-        {
-          subscription.frequency
-        }
-      </p>
-
-      <button
-        onClick={() =>
-          handleDeleteRecurring(
-            subscription.id
-          )
-        }
-      >
-        Delete
-      </button>
-    </div>
-  )
-)}
-
-<hr />
-
-<h2>
-  Savings Goals
-</h2>
-
-<input
-  placeholder="Gaming PC"
-  value={goalTitle}
-  onChange={(e) =>
-    setGoalTitle(
-      e.target.value
-    )
-  }
-/>
-
-<br />
-<br />
-
-<input
-  type="number"
-  placeholder="Target Amount"
-  value={goalTarget}
-  onChange={(e) =>
-    setGoalTarget(
-      e.target.value
-    )
-  }
-/>
-
-<br />
-<br />
-
-<button
-  onClick={
-    handleCreateGoal
-  }
->
-  Create Goal
-</button>
-
-<hr />
-
-{goals.map((goal) => {
-  const goalProgress =
-    goal.target > 0
-      ? (
-          goal.saved /
-          goal.target
-        ) *
-        100
-      : 0;
-
-  return (
-    <div
-      key={goal.id}
-      style={{
-        border:
-          "1px solid #ccc",
-        padding: "10px",
-        marginBottom:
-          "10px",
-      }}
-    >
-      <h3>
-        {goal.title}
-      </h3>
-
-      <p>
-        ₹{goal.saved} /
-        ₹{goal.target}
-      </p>
-
-      <p>
-        {goalProgress.toFixed(
-          1
-        )}
-        % Complete
-      </p>
-    </div>
-  );
-})}
+              <h3
+                style={{
+                  margin:
+                    "10px 0 0",
+                  fontSize: "1.4rem",
+                }}
+              >
+                {loading
+                  ? "Loading..."
+                  : item.value}
+              </h3>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

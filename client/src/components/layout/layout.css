@@ -1,0 +1,32 @@
+.app-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+}
+
+.app-layout__sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: 100vh;
+}
+
+.app-layout__content {
+  min-width: 0;
+}
+
+@media (max-width: 840px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout__sidebar {
+    position: static;
+    min-height: auto;
+    border-right: none !important;
+    border-bottom: 1px solid #274641;
+  }
+
+  .app-layout__content {
+    padding: 24px 16px !important;
+  }
+}

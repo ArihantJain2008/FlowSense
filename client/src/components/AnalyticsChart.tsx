@@ -7,10 +7,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-interface AnalyticsItem {
-  category: string;
-  amount: number;
-}
+import type { AnalyticsItem } from "../types/finance";
 
 interface Props {
   data: AnalyticsItem[];
