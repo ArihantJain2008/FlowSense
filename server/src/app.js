@@ -16,6 +16,9 @@ const budgetRoutes =
   const savingsGoalRoutes =
   require("./routes/savingsGoalRoutes");
 
+  const incomeRoutes =
+  require("./routes/incomeRoutes");
+
 app.use(cors());
 app.use(express.json());
 
@@ -36,6 +39,11 @@ app.use(
 app.use(
   "/api/savings-goals",
   savingsGoalRoutes
+);
+
+app.use(
+  "/api/income",
+  incomeRoutes
 );
 
 app.get("/", (req, res) => {
