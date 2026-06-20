@@ -55,3 +55,35 @@ exports.setBudget = async (
     });
   }
 };
+
+exports.getCurrentBudget =
+  async (req, res) => {
+    try {
+      const now = new Date();
+
+      const month =
+        now.getMonth() + 1;
+
+      const year =
+        now.getFullYear();
+
+      const budget =
+        await prisma.budget.findFirst({
+          where: {
+            userId: req.user.id,
+            month,
+            year,
+          },
+        });
+
+      res.json(
+        budget || {
+          amount: 0,
+        }
+      );
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
