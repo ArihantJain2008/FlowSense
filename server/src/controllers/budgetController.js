@@ -87,3 +87,55 @@ exports.getCurrentBudget =
       });
     }
   };
+
+  exports.getBudgetSummary =
+  async (req, res) => {
+    try {
+      const now = new Date();
+
+      const month =
+        now.getMonth() + 1;
+
+      const year =
+        now.getFullYear();
+
+      const budget =
+        await prisma.budget.findFirst({
+          where: {
+            userId: req.user.id,
+            month,
+            year,
+          },
+        });
+
+      const expenses =
+        await prisma.expense.findMany({
+          where: {
+            userId: req.user.id,
+          },
+        });
+
+      const spent =
+        expenses.reduce(
+          (sum, expense) =>
+            sum + expense.amount,
+          0
+        );
+
+      const budgetAmount =
+        budget?.amount || 0;
+
+      const remaining =
+        budgetAmount - spent;
+
+      res.json({
+        budget: budgetAmount,
+        spent,
+        remaining,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
