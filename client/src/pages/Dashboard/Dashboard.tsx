@@ -75,34 +75,34 @@ export default function Dashboard() {
     useState("");
 
   const loadData = async () => {
-    try {
-      const expensesData =
-        await getExpenses();
+  try {
+    const expensesData =
+      await getExpenses();
 
-      const summaryData =
-        await getBudgetSummary();
+    const summaryData =
+      await getBudgetSummary();
 
-      const analyticsData =
-        await getAnalytics();
-
-      setExpenses(expensesData);
-
-      setSummary(summaryData);
-
-      setAnalytics(
-        analyticsData
-      );
-    } catch (error) {
-      console.error(error);
-    }
+    const analyticsData =
+      await getAnalytics();
 
     const recurringData =
-  await getRecurringExpenses();
+      await getRecurringExpenses();
 
-setRecurringExpenses(
-  recurringData
-);
-  };
+    setExpenses(expensesData);
+
+    setSummary(summaryData);
+
+    setAnalytics(
+      analyticsData
+    );
+
+    setRecurringExpenses(
+      recurringData
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const [
   recurringExpenses,
