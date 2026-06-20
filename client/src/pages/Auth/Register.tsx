@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const { register } = useAuth();
@@ -13,17 +14,17 @@ export default function Register() {
   const [password, setPassword] =
     useState("");
 
+    const navigate = useNavigate();
+
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
     e.preventDefault();
 
     try {
-      await register(
-        name,
-        email,
-        password
-      );
+      await register(name, email, password);
+
+navigate("/dashboard");
 
       alert("Registered");
     } catch (error) {
