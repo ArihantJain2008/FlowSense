@@ -13,6 +13,9 @@ const budgetRoutes =
   const recurringExpenseRoutes =
   require("./routes/recurringExpenseRoutes");
 
+  const savingsGoalRoutes =
+  require("./routes/savingsGoalRoutes");
+
 app.use(cors());
 app.use(express.json());
 
@@ -28,6 +31,11 @@ app.use(
 app.use(
   "/api/recurring-expenses",
   recurringExpenseRoutes
+);
+
+app.use(
+  "/api/savings-goals",
+  savingsGoalRoutes
 );
 
 app.get("/", (req, res) => {
