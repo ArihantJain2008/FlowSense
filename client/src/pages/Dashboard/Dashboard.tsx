@@ -11,6 +11,7 @@ import {
 
 import {
   getBudgetSummary,
+  setBudget,
 } from "../../services/budgetService";
 
 import type { Expense } from "../../types/expense";
@@ -31,6 +32,10 @@ export default function Dashboard() {
       spent: 0,
       remaining: 0,
     });
+
+  const [budgetAmount,
+    setBudgetAmount] =
+    useState("");
 
   const [title, setTitle] =
     useState("");
@@ -60,17 +65,34 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  const handleSetBudget =
+    async () => {
+      try {
+        if (!budgetAmount) return;
+
+        await setBudget(
+          Number(budgetAmount)
+        );
+
+        setBudgetAmount("");
+
+        await loadData();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
   const handleAddExpense =
     async () => {
-      if (
-        !title ||
-        !amount ||
-        !category
-      ) {
-        return;
-      }
-
       try {
+        if (
+          !title ||
+          !amount ||
+          !category
+        ) {
+          return;
+        }
+
         await createExpense({
           title,
           amount: Number(amount),
@@ -117,6 +139,29 @@ export default function Dashboard() {
       }}
     >
       <h1>FlowSense Dashboard</h1>
+
+      <hr />
+
+      <h2>Set Monthly Budget</h2>
+
+      <input
+        type="number"
+        placeholder="Budget Amount"
+        value={budgetAmount}
+        onChange={(e) =>
+          setBudgetAmount(
+            e.target.value
+          )
+        }
+      />
+
+      <button
+        onClick={
+          handleSetBudget
+        }
+      >
+        Save Budget
+      </button>
 
       <hr />
 
@@ -170,7 +215,9 @@ export default function Dashboard() {
         placeholder="Title"
         value={title}
         onChange={(e) =>
-          setTitle(e.target.value)
+          setTitle(
+            e.target.value
+          )
         }
       />
 
@@ -182,23 +229,59 @@ export default function Dashboard() {
         placeholder="Amount"
         value={amount}
         onChange={(e) =>
-          setAmount(e.target.value)
+          setAmount(
+            e.target.value
+          )
         }
       />
 
       <br />
       <br />
 
-      <input
-        type="text"
-        placeholder="Category"
+      <select
         value={category}
         onChange={(e) =>
           setCategory(
             e.target.value
           )
         }
-      />
+      >
+        <option value="">
+          Select Category
+        </option>
+
+        <option value="Food">
+          Food
+        </option>
+
+        <option value="Transport">
+          Transport
+        </option>
+
+        <option value="Shopping">
+          Shopping
+        </option>
+
+        <option value="Bills">
+          Bills
+        </option>
+
+        <option value="Entertainment">
+          Entertainment
+        </option>
+
+        <option value="Health">
+          Health
+        </option>
+
+        <option value="Education">
+          Education
+        </option>
+
+        <option value="Other">
+          Other
+        </option>
+      </select>
 
       <br />
       <br />

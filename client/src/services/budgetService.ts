@@ -9,3 +9,14 @@ export const getBudgetSummary =
 
     return res.data;
   };
+
+  export const setBudget =
+  async (amount: number) => {
+    const res =
+      await api.post(
+        "/budgets",
+        { amount }
+      );
+
+    return res.data;
+  };
