@@ -22,6 +22,12 @@ import AnalyticsChart from "../../components/AnalyticsChart";
 
 import type { Expense } from "../../types/expense";
 
+import {
+  getRecurringExpenses,
+  createRecurringExpense,
+  deleteRecurringExpense,
+} from "../../services/recurringExpenseService";
+
 interface BudgetSummary {
   budget: number;
   spent: number;
@@ -31,6 +37,14 @@ interface BudgetSummary {
 interface AnalyticsItem {
   category: string;
   amount: number;
+}
+
+interface RecurringExpense {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  frequency: string;
 }
 
 export default function Dashboard() {
@@ -81,7 +95,41 @@ export default function Dashboard() {
     } catch (error) {
       console.error(error);
     }
+
+    const recurringData =
+  await getRecurringExpenses();
+
+setRecurringExpenses(
+  recurringData
+);
   };
+
+  const [
+  recurringExpenses,
+  setRecurringExpenses,
+] = useState<
+  RecurringExpense[]
+>([]);
+
+const [
+  recurringTitle,
+  setRecurringTitle,
+] = useState("");
+
+const [
+  recurringAmount,
+  setRecurringAmount,
+] = useState("");
+
+const [
+  recurringCategory,
+  setRecurringCategory,
+] = useState("");
+
+const [
+  recurringFrequency,
+  setRecurringFrequency,
+] = useState("Monthly");
 
   useEffect(() => {
     loadData();
@@ -141,6 +189,51 @@ export default function Dashboard() {
         console.error(error);
       }
     };
+
+    const handleAddRecurring =
+  async () => {
+    try {
+      await createRecurringExpense({
+        title:
+          recurringTitle,
+        amount: Number(
+          recurringAmount
+        ),
+        category:
+          recurringCategory,
+        frequency:
+          recurringFrequency,
+      });
+
+      setRecurringTitle("");
+      setRecurringAmount("");
+      setRecurringCategory("");
+
+      await loadData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteRecurring =
+  async (id: string) => {
+    try {
+      await deleteRecurringExpense(
+        id
+      );
+
+      await loadData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const totalSubscriptions =
+  recurringExpenses.reduce(
+    (sum, item) =>
+      sum + item.amount,
+    0
+  );
 
   const progress =
     summary.budget > 0
@@ -318,17 +411,7 @@ export default function Dashboard() {
 
       <hr />
 
-      <h2>
-        Spending Analytics
-      </h2>
-
-      <AnalyticsChart
-        data={analytics}
-      />
-
-      <hr />
-
-      <h2>
+<h2>
         Recent Expenses
       </h2>
 
@@ -378,6 +461,154 @@ export default function Dashboard() {
           )
         )
       )}
+
+      <h2>
+        Spending Analytics
+      </h2>
+
+<p>
+  Monthly Subscription Cost:
+  ₹
+  {
+    totalSubscriptions
+  }
+</p>
+
+      <AnalyticsChart
+        data={analytics}
+      />
+
+      <hr />
+
+      <hr />
+
+<h2>
+  Subscription Tracker
+</h2>
+
+<input
+  placeholder="Netflix"
+  value={recurringTitle}
+  onChange={(e) =>
+    setRecurringTitle(
+      e.target.value
+    )
+  }
+/>
+
+<br />
+<br />
+
+<input
+  type="number"
+  placeholder="Amount"
+  value={recurringAmount}
+  onChange={(e) =>
+    setRecurringAmount(
+      e.target.value
+    )
+  }
+/>
+
+<br />
+<br />
+
+<select
+  value={recurringCategory}
+  onChange={(e) =>
+    setRecurringCategory(
+      e.target.value
+    )
+  }
+>
+  <option value="">
+    Category
+  </option>
+
+  <option value="Entertainment">
+    Entertainment
+  </option>
+
+  <option value="Health">
+    Health
+  </option>
+
+  <option value="Bills">
+    Bills
+  </option>
+
+  <option value="Other">
+    Other
+  </option>
+</select>
+
+<br />
+<br />
+
+<select
+  value={recurringFrequency}
+  onChange={(e) =>
+    setRecurringFrequency(
+      e.target.value
+    )
+  }
+>
+  <option value="Monthly">
+    Monthly
+  </option>
+
+  <option value="Yearly">
+    Yearly
+  </option>
+</select>
+
+<br />
+<br />
+
+<button
+  onClick={
+    handleAddRecurring
+  }
+>
+  Add Subscription
+</button>
+
+<hr />
+
+{recurringExpenses.map(
+  (subscription) => (
+    <div
+      key={subscription.id}
+    >
+      <h4>
+        {
+          subscription.title
+        }
+      </h4>
+
+      <p>
+        ₹
+        {
+          subscription.amount
+        }
+        /
+        {
+          subscription.frequency
+        }
+      </p>
+
+      <button
+        onClick={() =>
+          handleDeleteRecurring(
+            subscription.id
+          )
+        }
+      >
+        Delete
+      </button>
+    </div>
+  )
+)}
     </div>
   );
 }
