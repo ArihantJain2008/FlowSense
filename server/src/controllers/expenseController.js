@@ -28,8 +28,8 @@ const getExpenses = async (req, res) => {
         userId: req.user.id,
       },
       orderBy: {
-        date: "desc",
-      },
+  createdAt: "desc",
+  },
     });
 
     res.json(expenses);
