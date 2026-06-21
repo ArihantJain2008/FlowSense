@@ -166,6 +166,29 @@ export default function Dashboard() {
     Allocate Savings
   </Text>
 </TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() =>
+    router.push(
+      "/recurring-expenses"
+    )
+  }
+  style={{
+    backgroundColor:
+      "#7c3aed",
+    padding: 12,
+    borderRadius: 10,
+  }}
+>
+  <Text
+    style={{
+      color: "white",
+      textAlign: "center",
+    }}
+  >
+    Recurring Expenses
+  </Text>
+</TouchableOpacity>
     </View>
   );
 }
