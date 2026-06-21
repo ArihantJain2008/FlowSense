@@ -1,9 +1,25 @@
 import { useEffect } from "react";
 import { View, Text } from "react-native";
 
+import { registerUser } from "../../src/services/authService";
+
 export default function Home() {
   useEffect(() => {
-    console.log("Page Loaded");
+    const test = async () => {
+      try {
+        const data = await registerUser(
+          "Mobile User",
+          `mobile${Date.now()}@test.com`,
+          "123456"
+        );
+
+        console.log("SUCCESS:", data);
+      } catch (error) {
+        console.log("ERROR:", error);
+      }
+    };
+
+    test();
   }, []);
 
   return (
@@ -14,7 +30,7 @@ export default function Home() {
         alignItems: "center",
       }}
     >
-      <Text>FlowSense Mobile Works</Text>
+      <Text>FlowSense Mobile</Text>
     </View>
   );
 }
