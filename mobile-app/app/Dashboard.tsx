@@ -154,6 +154,18 @@ export default function Dashboard() {
     Savings Goals
   </Text>
 </TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() =>
+    router.push(
+      "/allocate-savings"
+    )
+  }
+>
+  <Text>
+    Allocate Savings
+  </Text>
+</TouchableOpacity>
     </View>
   );
 }
