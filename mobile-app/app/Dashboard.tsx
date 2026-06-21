@@ -1,56 +1,111 @@
 import {
   View,
   Text,
-  Button,
+  ActivityIndicator,
 } from "react-native";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import { router } from "expo-router";
+import {
+  getBudgetSummary,
+  getExpenses,
+} from "../src/services/dashboardService";
 
 export default function Dashboard() {
-  const handleLogout =
-    async () => {
-      await AsyncStorage.removeItem(
-        "token"
-      );
+  const [loading, setLoading] =
+    useState(true);
 
-      router.replace(
-        "/login"
-      );
+  const [summary, setSummary] =
+    useState<any>(null);
+
+  const [expenseCount,
+    setExpenseCount] =
+    useState(0);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard =
+    async () => {
+      try {
+        const budgetData =
+          await getBudgetSummary();
+
+        const expenses =
+          await getExpenses();
+
+        setSummary(
+          budgetData
+        );
+
+        setExpenseCount(
+          expenses.length
+        );
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent:
+            "center",
+          alignItems:
+            "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+        />
+      </View>
+    );
+  }
 
   return (
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        padding: 20,
+        gap: 20,
       }}
     >
       <Text
         style={{
-          fontSize: 24,
-          marginBottom: 20,
+          fontSize: 28,
+          fontWeight: "bold",
         }}
       >
-        FlowSense Dashboard
+        FlowSense
       </Text>
 
-      <Text
-        style={{
-          marginBottom: 20,
-        }}
-      >
-        Logged In Successfully
+      <Text>
+        Budget:
+        ₹{summary?.budget}
       </Text>
 
-      <Button
-        title="Logout"
-        onPress={
-          handleLogout
-        }
-      />
+      <Text>
+        Spent:
+        ₹{summary?.spent}
+      </Text>
+
+      <Text>
+        Remaining:
+        ₹{summary?.remaining}
+      </Text>
+
+      <Text>
+        Total Expenses:
+        {expenseCount}
+      </Text>
     </View>
   );
 }
