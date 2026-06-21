@@ -4,7 +4,7 @@ export const getBudgetSummary =
   async () => {
     const response =
       await api.get(
-        "/budget/summary"
+        "/budgets/summary"
       );
 
     return response.data;

@@ -2,6 +2,7 @@ import {
   View,
   Text,
   ActivityIndicator,
+  TouchableOpacity
 } from "react-native";
 
 import {
@@ -13,6 +14,8 @@ import {
   getBudgetSummary,
   getExpenses,
 } from "../src/services/dashboardService";
+
+import { router } from "expo-router";
 
 export default function Dashboard() {
   const [loading, setLoading] =
@@ -29,28 +32,40 @@ export default function Dashboard() {
     loadDashboard();
   }, []);
 
-  const loadDashboard =
-    async () => {
-      try {
-        const budgetData =
-          await getBudgetSummary();
+  const loadDashboard = async () => {
+  try {
+    console.log("Loading dashboard...");
 
-        const expenses =
-          await getExpenses();
+    const budgetData =
+      await getBudgetSummary();
 
-        setSummary(
-          budgetData
-        );
+    console.log(
+      "Budget Data:",
+      budgetData
+    );
 
-        setExpenseCount(
-          expenses.length
-        );
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const expenses =
+      await getExpenses();
+
+    console.log(
+      "Expenses:",
+      expenses
+    );
+
+    setSummary(budgetData);
+
+    setExpenseCount(
+      expenses.length
+    );
+  } catch (error) {
+    console.log(
+      "Dashboard Error:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
     return (
@@ -106,6 +121,16 @@ export default function Dashboard() {
         Total Expenses:
         {expenseCount}
       </Text>
+
+      <TouchableOpacity
+  onPress={() =>
+    router.push("/expenses")
+  }
+>
+  <Text>
+    Open Expenses
+  </Text>
+</TouchableOpacity>
     </View>
   );
 }
