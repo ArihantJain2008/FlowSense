@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createIncome,
   getIncome,
+  updateIncome,
   deleteIncome,
 } = require(
   "../controllers/incomeController"
@@ -25,6 +26,7 @@ router
 
 router
   .route("/:id")
+  .put(updateIncome)
   .delete(deleteIncome);
 
 module.exports = router;

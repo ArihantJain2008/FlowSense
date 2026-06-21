@@ -29,3 +29,23 @@ export const getAnalytics =
 
     return response.data;
   };
+
+export const getCurrentBudget =
+  async () => {
+    const response =
+      await api.get(
+        "/budgets/current"
+      );
+
+    return response.data;
+  };
+
+export const setCurrentBudget =
+  async (amount: number) => {
+    const response =
+      await api.post("/budgets", {
+        amount,
+      });
+
+    return response.data;
+  };

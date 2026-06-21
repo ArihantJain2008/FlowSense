@@ -94,19 +94,12 @@ exports.getCurrentBudget =
   exports.getBudgetSummary =
   async (req, res) => {
     try {
-      const {
-        budget,
-        spent,
-        remaining,
-      } = await getMonthlyBudgetSummary(
+      const summary =
+        await getMonthlyBudgetSummary(
         req.user.id
       );
 
-      res.json({
-        budget,
-        spent,
-        remaining,
-      });
+      res.json(summary);
     } catch (error) {
       res.status(500).json({
         message: error.message,

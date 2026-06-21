@@ -2,13 +2,19 @@ const prisma = require("../lib/prisma");
 
 const createExpense = async (req, res) => {
   try {
-    const { title, amount, category } = req.body;
+    const {
+      title,
+      amount,
+      category,
+      date,
+    } = req.body;
 
     const expense = await prisma.expense.create({
       data: {
         title,
         amount: Number(amount),
         category,
+        date: date ? new Date(date) : undefined,
         userId: req.user.id,
       },
     });
@@ -42,16 +48,38 @@ const getExpenses = async (req, res) => {
 
 const updateExpense = async (req, res) => {
   try {
-    const { title, amount, category } = req.body;
+    const {
+      title,
+      amount,
+      category,
+      date,
+    } = req.body;
+
+    const existingExpense =
+      await prisma.expense.findFirst({
+        where: {
+          id: req.params.id,
+          userId: req.user.id,
+        },
+      });
+
+    if (!existingExpense) {
+      return res.status(404).json({
+        message: "Expense not found",
+      });
+    }
 
     const expense = await prisma.expense.update({
       where: {
-        id: req.params.id,
+        id: existingExpense.id,
       },
       data: {
         title,
         amount: Number(amount),
         category,
+        date: date
+          ? new Date(date)
+          : existingExpense.date,
       },
     });
 
@@ -65,9 +93,23 @@ const updateExpense = async (req, res) => {
 
 const deleteExpense = async (req, res) => {
   try {
+    const existingExpense =
+      await prisma.expense.findFirst({
+        where: {
+          id: req.params.id,
+          userId: req.user.id,
+        },
+      });
+
+    if (!existingExpense) {
+      return res.status(404).json({
+        message: "Expense not found",
+      });
+    }
+
     await prisma.expense.delete({
       where: {
-        id: req.params.id,
+        id: existingExpense.id,
       },
     });
 

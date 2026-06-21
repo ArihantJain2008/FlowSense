@@ -1,48 +1,51 @@
 import { api } from "./api";
 
-export const getExpenses = async () => {
-  const response = await api.get("/expenses");
+export const getIncome = async () => {
+  const response = await api.get("/income");
   return response.data;
 };
 
-export const createExpense = async (
+export const createIncome = async (
   title: string,
   amount: number,
-  category: string,
+  source: string,
   date?: string
 ) => {
-  const response = await api.post("/expenses", {
-    title,
-    amount,
-    category,
-    date,
-  });
+  const response = await api.post(
+    "/income",
+    {
+      title,
+      amount,
+      source,
+      date,
+    }
+  );
 
   return response.data;
 };
 
-export const updateExpense = async (
+export const updateIncome = async (
   id: string,
   payload: {
     title: string;
     amount: number;
-    category: string;
+    source: string;
     date?: string;
   }
 ) => {
   const response = await api.put(
-    `/expenses/${id}`,
+    `/income/${id}`,
     payload
   );
 
   return response.data;
 };
 
-export const deleteExpense = async (
+export const deleteIncome = async (
   id: string
 ) => {
   const response = await api.delete(
-    `/expenses/${id}`
+    `/income/${id}`
   );
 
   return response.data;

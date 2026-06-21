@@ -2,7 +2,12 @@ const prisma = require("../lib/prisma");
 
 const createIncome = async (req, res) => {
   try {
-    const { title, amount, source } =
+    const {
+      title,
+      amount,
+      source,
+      date,
+    } =
       req.body;
 
     const income =
@@ -11,6 +16,9 @@ const createIncome = async (req, res) => {
           title,
           amount: Number(amount),
           source,
+          createdAt: date
+            ? new Date(date)
+            : undefined,
           userId: req.user.id,
         },
       });
@@ -43,12 +51,73 @@ const getIncome = async (req, res) => {
   }
 };
 
+const updateIncome =
+  async (req, res) => {
+    try {
+      const {
+        title,
+        amount,
+        source,
+        date,
+      } = req.body;
+
+      const existingIncome =
+        await prisma.income.findFirst({
+          where: {
+            id: req.params.id,
+            userId: req.user.id,
+          },
+        });
+
+      if (!existingIncome) {
+        return res.status(404).json({
+          message: "Income not found",
+        });
+      }
+
+      const income =
+        await prisma.income.update({
+          where: {
+            id: existingIncome.id,
+          },
+          data: {
+            title,
+            amount: Number(amount),
+            source,
+            createdAt: date
+              ? new Date(date)
+              : existingIncome.createdAt,
+          },
+        });
+
+      res.json(income);
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  };
+
 const deleteIncome =
   async (req, res) => {
     try {
+      const existingIncome =
+        await prisma.income.findFirst({
+          where: {
+            id: req.params.id,
+            userId: req.user.id,
+          },
+        });
+
+      if (!existingIncome) {
+        return res.status(404).json({
+          message: "Income not found",
+        });
+      }
+
       await prisma.income.delete({
         where: {
-          id: req.params.id,
+          id: existingIncome.id,
         },
       });
 
@@ -66,5 +135,6 @@ const deleteIncome =
 module.exports = {
   createIncome,
   getIncome,
+  updateIncome,
   deleteIncome,
 };

@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { getProfile as fetchProfile } from "./profileService";
 
 export const registerUser = async (
   name: string,
@@ -31,3 +32,5 @@ export const loginUser = async (
 
   return response.data;
 };
+
+export const getProfile = fetchProfile;

@@ -7,11 +7,13 @@ function getCurrentMonthContext() {
     now,
     month: now.getMonth() + 1,
     year: now.getFullYear(),
+
     startOfMonth: new Date(
       now.getFullYear(),
       now.getMonth(),
       1
     ),
+
     startOfNextMonth: new Date(
       now.getFullYear(),
       now.getMonth() + 1,
@@ -34,6 +36,7 @@ async function getMonthlyBudgetSummary(
     budget,
     expenses,
     allocationBatch,
+    incomes,
   ] = await Promise.all([
     prisma.budget.findFirst({
       where: {
@@ -42,6 +45,7 @@ async function getMonthlyBudgetSummary(
         year,
       },
     }),
+
     prisma.expense.findMany({
       where: {
         userId,
@@ -51,11 +55,22 @@ async function getMonthlyBudgetSummary(
         },
       },
     }),
+
     prisma.savingsAllocationBatch.findFirst({
       where: {
         userId,
         month,
         year,
+      },
+    }),
+
+    prisma.income.findMany({
+      where: {
+        userId,
+        createdAt: {
+          gte: startOfMonth,
+          lt: startOfNextMonth,
+        },
       },
     }),
   ]);
@@ -66,20 +81,42 @@ async function getMonthlyBudgetSummary(
     0
   );
 
-  const budgetAmount =
+  const totalIncome =
+    incomes.reduce(
+      (sum, income) =>
+        sum + income.amount,
+      0
+    );
+
+  const baseBudget =
     budget?.amount || 0;
+
+  const effectiveBudget =
+    baseBudget + totalIncome;
 
   const allocated =
     allocationBatch?.totalAllocated || 0;
 
+  const remaining =
+    effectiveBudget -
+    spent -
+    allocated;
+
   return {
     month,
     year,
-    budget: budgetAmount,
+
+    baseBudget,
+
+    income: totalIncome,
+
+    budget: effectiveBudget,
+
     spent,
+
     allocated,
-    remaining:
-      budgetAmount - spent - allocated,
+
+    remaining,
   };
 }
 
