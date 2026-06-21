@@ -131,6 +131,29 @@ export default function Dashboard() {
     Open Expenses
   </Text>
 </TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() =>
+    router.push(
+      "/savings-goals"
+    )
+  }
+  style={{
+    backgroundColor:
+      "#2563eb",
+    padding: 12,
+    borderRadius: 10,
+  }}
+>
+  <Text
+    style={{
+      color: "white",
+      textAlign: "center",
+    }}
+  >
+    Savings Goals
+  </Text>
+</TouchableOpacity>
     </View>
   );
 }
