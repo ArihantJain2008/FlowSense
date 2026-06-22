@@ -23,17 +23,19 @@ export const createExpense = async (
 
 export const updateExpense = async (
   id: string,
-  payload: {
-    title: string;
-    amount: number;
-    category: string;
-    date?: string;
-  }
+  title: string,
+  amount: number,
+  category: string
 ) => {
-  const response = await api.put(
-    `/expenses/${id}`,
-    payload
-  );
+  const response =
+    await api.put(
+      `/expenses/${id}`,
+      {
+        title,
+        amount,
+        category,
+      }
+    );
 
   return response.data;
 };

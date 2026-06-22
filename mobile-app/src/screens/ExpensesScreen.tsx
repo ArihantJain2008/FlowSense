@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
@@ -21,6 +22,7 @@ import {
   createExpense,
   deleteExpense,
   getExpenses,
+  updateExpense
 } from "../services/expenseService";
 import { useAppTheme } from "../theme";
 import { formatCurrency, formatDate } from "../utils/format";
@@ -120,6 +122,34 @@ export default function ExpensesScreen() {
     }
   };
 
+  const [editingExpense, setEditingExpense] =
+  useState<ExpenseItem | null>(null);
+
+const [editTitle, setEditTitle] =
+  useState("");
+
+const [editAmount, setEditAmount] =
+  useState("");
+
+const [editCategory, setEditCategory] =
+  useState("");
+
+  const openEditModal = (
+  expense: ExpenseItem
+) => {
+  setEditingExpense(expense);
+
+  setEditTitle(expense.title);
+
+  setEditAmount(
+    String(expense.amount)
+  );
+
+  setEditCategory(
+    expense.category
+  );
+};
+
   const handleDelete = async (
     id: string
   ) => {
@@ -138,6 +168,45 @@ export default function ExpensesScreen() {
         deleteError?.response?.data
           ?.message ||
           "Unable to delete expense."
+      );
+    }
+  };
+
+  const handleUpdateExpense =
+  async () => {
+    if (!editingExpense) return;
+
+    const numericAmount =
+      Number(editAmount);
+
+    if (
+      Number.isNaN(numericAmount) ||
+      numericAmount <= 0
+    ) {
+      toast.showError(
+        "Enter a valid amount."
+      );
+      return;
+    }
+
+    try {
+      await updateExpense(
+        editingExpense.id,
+        editTitle,
+        numericAmount,
+        editCategory
+      );
+
+      toast.showSuccess(
+        "Expense updated."
+      );
+
+      setEditingExpense(null);
+
+      await loadExpenses();
+    } catch (error) {
+      toast.showError(
+        "Unable to update expense."
       );
     }
   };
@@ -384,12 +453,30 @@ export default function ExpensesScreen() {
       }
       renderItem={({ item }) => (
         <Swipeable
-          renderRightActions={() =>
-            renderDeleteAction(
-              item.id
-            )
-          }
-        >
+  renderRightActions={() => (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+      }}
+    >
+      <AppButton
+        label="Edit"
+        onPress={() =>
+          openEditModal(item)
+        }
+      />
+
+      <AppButton
+        label="Delete"
+        onPress={() =>
+          handleDelete(item.id)
+        }
+        variant="danger"
+      />
+    </View>
+  )}
+>
           <Card
             style={{
               backgroundColor:
@@ -488,6 +575,78 @@ export default function ExpensesScreen() {
         </Swipeable>
       )}
     />
+
+    <Modal
+  visible={!!editingExpense}
+  animationType="slide"
+  transparent
+>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+      backgroundColor:
+        "rgba(0,0,0,0.5)",
+    }}
+  >
+    <Card>
+      <AppInput
+        label="Title"
+        value={editTitle}
+        onChangeText={
+          setEditTitle
+        }
+      />
+
+      <AppInput
+        label="Amount"
+        value={editAmount}
+        onChangeText={
+          setEditAmount
+        }
+      />
+
+      <Picker
+  selectedValue={editCategory}
+  onValueChange={(value) =>
+    setEditCategory(value)
+  }
+  style={{
+    color: theme.colors.text,
+  }}
+>
+        {expenseCategories.map(
+          (category) => (
+            <Picker.Item
+              key={category}
+              label={category}
+              value={category}
+            />
+          )
+        )}
+      </Picker>
+
+      <AppButton
+        label="Save Changes"
+        onPress={
+          handleUpdateExpense
+        }
+      />
+
+      <AppButton
+        label="Cancel"
+        variant="ghost"
+        onPress={() =>
+          setEditingExpense(
+            null
+          )
+        }
+      />
+    </Card>
+  </View>
+</Modal>
+
   </ScreenContainer>
 );
 }

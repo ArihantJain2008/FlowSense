@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from "react-native";
 
 import AppButton from "../components/AppButton";
@@ -19,6 +20,7 @@ import {
   createIncome,
   deleteIncome,
   getIncome,
+  updateIncome
 } from "../services/incomeService";
 import { useAppTheme } from "../theme";
 import { formatCurrency, formatDate } from "../utils/format";
@@ -40,6 +42,21 @@ export default function IncomeScreen() {
     useState(false);
   const [error, setError] =
     useState<string | null>(null);
+    const [editingIncome,
+  setEditingIncome] =
+  useState<IncomeItem | null>(null);
+
+const [editTitle,
+  setEditTitle] =
+  useState("");
+
+const [editAmount,
+  setEditAmount] =
+  useState("");
+
+const [editSource,
+  setEditSource] =
+  useState("");
 
   const loadIncome = async (
     isRefresh = false
@@ -68,6 +85,63 @@ export default function IncomeScreen() {
   useEffect(() => {
     loadIncome();
   }, []);
+
+  const openEditModal = (
+  income: IncomeItem
+) => {
+  setEditingIncome(income);
+
+  setEditTitle(income.title);
+
+  setEditAmount(
+    String(income.amount)
+  );
+
+  setEditSource(
+    income.source
+  );
+};
+
+const handleUpdateIncome =
+  async () => {
+    if (!editingIncome) return;
+
+    const numericAmount =
+      Number(editAmount);
+
+    if (
+      Number.isNaN(numericAmount) ||
+      numericAmount <= 0
+    ) {
+      toast.showError(
+        "Enter a valid amount."
+      );
+      return;
+    }
+
+    try {
+      await updateIncome(
+        editingIncome.id,
+        {
+          title: editTitle,
+          amount: numericAmount,
+          source: editSource,
+        }
+      );
+
+      toast.showSuccess(
+        "Income updated."
+      );
+
+      setEditingIncome(null);
+
+      await loadIncome();
+    } catch {
+      toast.showError(
+        "Unable to update income."
+      );
+    }
+  };
 
   const handleAddIncome = async () => {
     if (!title || !amount || !source) {
@@ -380,19 +454,92 @@ export default function IncomeScreen() {
               )}
             </Text>
 
-            <AppButton
-              label="Delete"
-              onPress={() =>
-                handleDelete(
-                  item.id
-                )
-              }
-              variant="ghost"
-            />
+            <View
+  style={{
+    flexDirection: "row",
+    gap: 8,
+  }}
+>
+  <AppButton
+    label="Edit"
+    onPress={() =>
+      openEditModal(item)
+    }
+    variant="ghost"
+  />
+
+  <AppButton
+    label="Delete"
+    onPress={() =>
+      handleDelete(item.id)
+    }
+    variant="ghost"
+  />
+</View>
           </View>
         </Card>
       )}
     />
+
+    <Modal
+  visible={!!editingIncome}
+  transparent
+  animationType="slide"
+>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+      backgroundColor:
+        "rgba(0,0,0,0.5)",
+    }}
+  >
+    <Card>
+      <AppInput
+        label="Title"
+        value={editTitle}
+        onChangeText={
+          setEditTitle
+        }
+      />
+
+      <AppInput
+        label="Amount"
+        value={editAmount}
+        keyboardType="numeric"
+        onChangeText={
+          setEditAmount
+        }
+      />
+
+      <AppInput
+        label="Source"
+        value={editSource}
+        onChangeText={
+          setEditSource
+        }
+      />
+
+      <AppButton
+        label="Save Changes"
+        onPress={
+          handleUpdateIncome
+        }
+      />
+
+      <AppButton
+        label="Cancel"
+        variant="ghost"
+        onPress={() =>
+          setEditingIncome(
+            null
+          )
+        }
+      />
+    </Card>
+  </View>
+</Modal>
   </ScreenContainer>
 );
 }

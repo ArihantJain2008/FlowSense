@@ -1,6 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
 import {
   Pressable,
   RefreshControl,
@@ -96,7 +104,13 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+  }, []);  
+
+  useFocusEffect(
+  useCallback(() => {
+    loadDashboard();
+  }, [])
+);
 
   const spent = Number(
     summary?.spent ?? 0
@@ -155,7 +169,7 @@ export default function DashboardScreen() {
             { color: theme.colors.text },
           ]}
         >
-          New dashboard 
+           Financial Overview
         </Text>
       </View>
     </View>
