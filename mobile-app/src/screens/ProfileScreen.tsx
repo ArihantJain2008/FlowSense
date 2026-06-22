@@ -60,17 +60,10 @@ export default function ProfileScreen() {
 
   const { user, logout } = useAuth();
 
-  const [budgetAlerts, setBudgetAlerts] =
-    useState(true);
-
-  const [goalReminders, setGoalReminders] =
-    useState(true);
-
-  const [recurringReminders, setRecurringReminders] =
-    useState(true);
     const {
   settings,
   setThemePreference,
+  updateNotifications
 } = useSettings();
 
 const initials =
@@ -229,13 +222,13 @@ const handleLogout = async () => {
 </Text>
 
             <Switch
-              value={
-                budgetAlerts
-              }
-              onValueChange={
-                setBudgetAlerts
-              }
-            />
+  value={settings.notifications.budgetAlerts}
+  onValueChange={(value) =>
+    updateNotifications({
+      budgetAlerts: value,
+    })
+  }
+/>  
           </View>
 
           <View
@@ -250,14 +243,14 @@ const handleLogout = async () => {
   Goal Reminders
 </Text>
 
-            <Switch
-              value={
-                goalReminders
-              }
-              onValueChange={
-                setGoalReminders
-              }
-            />
+           <Switch
+  value={settings.notifications.goalReminders}
+  onValueChange={(value) =>
+    updateNotifications({
+      goalReminders: value,
+    })
+  }
+/>
           </View>
 
           <View
@@ -273,14 +266,26 @@ const handleLogout = async () => {
 </Text>
 
             <Switch
-              value={
-                recurringReminders
-              }
-              onValueChange={
-                setRecurringReminders
-              }
-            />
+  value={settings.notifications.recurringReminders}
+  onValueChange={(value) =>
+    updateNotifications({
+      recurringReminders: value,
+    })
+  }
+/>
           </View>
+
+          <Card>
+  <AppButton
+    label="Import Transactions"
+    onPress={() =>
+      router.push(
+        "/import-transactions"
+      )
+    }
+  />
+</Card>
+
         </Card>
 
         <Card>

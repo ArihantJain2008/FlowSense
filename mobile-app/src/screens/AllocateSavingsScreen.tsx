@@ -104,224 +104,262 @@ export default function AllocateSavingsScreen() {
   };
 
   return (
-    <ScreenContainer scroll={false}>
-      <View style={styles.screenGap}>
-        <View style={styles.titleWrap}>
-          <Text
-            style={[
-              theme.typography.h1,
-              { color: theme.colors.text },
-            ]}
-          >
-            Allocate Savings
-          </Text>
-          <Text
-            style={[
-              theme.typography.body,
-              {
-                color:
-                  theme.colors.textMuted,
-              },
-            ]}
-          >
-            Move available balance into the
-            goals that matter most.
-          </Text>
-        </View>
-
-        {error ? (
-          <EmptyState
-            title="Allocation unavailable"
-            message={error}
-            actionLabel="Reload"
-            onAction={loadData}
-            icon="warning-outline"
-          />
-        ) : null}
-
-        {summary ? (
-          <>
-            <Card
-              style={{
-                gap: theme.spacing.md,
-                backgroundColor:
-                  theme.colors.surfaceStrong,
-              }}
+  <ScreenContainer scroll={false}>
+    <FlatList
+      data={
+        loading || !summary
+          ? []
+          : summary.goals
+      }
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{
+        paddingBottom: 32,
+        gap: 12,
+      }}
+      ListHeaderComponent={
+        <View style={{ gap: 16 }}>
+          <View style={styles.titleWrap}>
+            <Text
+              style={[
+                theme.typography.h1,
+                {
+                  color:
+                    theme.colors.text,
+                },
+              ]}
             >
-              <Text
-                style={[
-                  theme.typography.h3,
-                  { color: theme.colors.text },
-                ]}
-              >
-                Available Summary
-              </Text>
-              <Text
-                style={[
-                  theme.typography.body,
-                  {
-                    color:
-                      theme.colors.textMuted,
-                  },
-                ]}
-              >
-                Budget:{" "}
-                {formatCurrency(summary.budget)}
-              </Text>
-              <Text
-                style={[
-                  theme.typography.body,
-                  {
-                    color:
-                      theme.colors.textMuted,
-                  },
-                ]}
-              >
-                Spent:{" "}
-                {formatCurrency(summary.spent)}
-              </Text>
-              <Text
-                style={[
-                  theme.typography.bodyStrong,
-                  {
-                    color:
-                      theme.colors.text,
-                  },
-                ]}
-              >
-                Remaining:{" "}
-                {formatCurrency(
-                  summary.remaining
-                )}
-              </Text>
-            </Card>
+              Allocate Savings
+            </Text>
 
-            <FlatList
-              style={styles.list}
-              data={
-                loading
-                  ? []
-                  : summary.goals
-              }
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={
-                styles.listContent
-              }
-              ListEmptyComponent={
-                <EmptyState
-                  title="No goals to fund"
-                  message="Create a savings goal first, then come back to allocate."
-                  icon="wallet-outline"
-                />
-              }
-              renderItem={({ item }) => {
-                const progress =
-                  Number(item.target) > 0
-                    ? clampPercentage(
-                        (Number(
-                          item.saved
-                        ) /
-                          Number(
-                            item.target
-                          )) *
-                          100
-                      )
-                    : 0;
-
-                return (
-                  <TouchableOpacity
-                    onPress={() =>
-                      setSelectedGoalId(
-                        item.id
-                      )
-                    }
-                    style={[
-                      styles.goalTouch,
-                      {
-                        borderColor:
-                          selectedGoalId ===
-                          item.id
-                            ? theme.colors.primary
-                            : "transparent",
-                      },
-                    ]}
-                  >
-                    <Card
-                      style={{
-                        gap: theme.spacing.md,
-                        backgroundColor:
-                          theme.colors.surfaceStrong,
-                      }}
-                    >
-                      <Text
-                        style={[
-                          theme.typography.h3,
-                          {
-                            color:
-                              theme.colors.text,
-                          },
-                        ]}
-                      >
-                        {item.title}
-                      </Text>
-                      <ProgressBar
-                        progress={progress}
-                        valueLabel={`${formatCurrency(
-                          item.saved
-                        )} / ${formatCurrency(
-                          item.target
-                        )}`}
-                      />
-                    </Card>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-
-            <Card
-              style={{
-                gap: theme.spacing.md,
-                backgroundColor:
-                  theme.colors.surfaceStrong,
-              }}
-            >
-              <AppInput
-                label="Allocation Amount"
-                placeholder="0"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-              />
-              <AppButton
-                label="Allocate Savings"
-                onPress={handleAllocate}
-                loading={saving}
-              />
-            </Card>
-          </>
-        ) : loading ? (
-          <Card>
             <Text
               style={[
                 theme.typography.body,
                 {
                   color:
-                    theme.colors.textMuted,
+                    theme.colors
+                      .textMuted,
                 },
               ]}
             >
-              Loading allocation details...
+              Move available balance
+              into the goals that
+              matter most.
             </Text>
-          </Card>
-        ) : null}
-      </View>
-    </ScreenContainer>
-  );
+          </View>
+
+          {error ? (
+            <EmptyState
+              title="Allocation unavailable"
+              message={error}
+              actionLabel="Reload"
+              onAction={loadData}
+              icon="warning-outline"
+            />
+          ) : null}
+
+          {summary ? (
+            <>
+              <Card
+                style={{
+                  gap:
+                    theme.spacing.md,
+                  backgroundColor:
+                    theme.colors
+                      .surfaceStrong,
+                }}
+              >
+                <Text
+                  style={[
+                    theme.typography.h3,
+                    {
+                      color:
+                        theme.colors
+                          .text,
+                    },
+                  ]}
+                >
+                  Available Summary
+                </Text>
+
+                <Text
+                  style={[
+                    theme.typography.body,
+                    {
+                      color:
+                        theme.colors
+                          .textMuted,
+                    },
+                  ]}
+                >
+                  Budget:{" "}
+                  {formatCurrency(
+                    summary.budget
+                  )}
+                </Text>
+
+                <Text
+                  style={[
+                    theme.typography.body,
+                    {
+                      color:
+                        theme.colors
+                          .textMuted,
+                    },
+                  ]}
+                >
+                  Spent:{" "}
+                  {formatCurrency(
+                    summary.spent
+                  )}
+                </Text>
+
+                <Text
+                  style={[
+                    theme.typography
+                      .bodyStrong,
+                    {
+                      color:
+                        theme.colors
+                          .text,
+                    },
+                  ]}
+                >
+                  Remaining:{" "}
+                  {formatCurrency(
+                    summary.remaining
+                  )}
+                </Text>
+              </Card>
+
+              <Card
+                style={{
+                  gap:
+                    theme.spacing.md,
+                  backgroundColor:
+                    theme.colors
+                      .surfaceStrong,
+                }}
+              >
+                <AppInput
+                  label="Allocation Amount"
+                  placeholder="0"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={
+                    setAmount
+                  }
+                />
+
+                <AppButton
+                  label="Allocate Savings"
+                  onPress={
+                    handleAllocate
+                  }
+                  loading={saving}
+                />
+              </Card>
+            </>
+          ) : loading ? (
+            <Card>
+              <Text
+                style={[
+                  theme.typography
+                    .body,
+                  {
+                    color:
+                      theme.colors
+                        .textMuted,
+                  },
+                ]}
+              >
+                Loading allocation
+                details...
+              </Text>
+            </Card>
+          ) : null}
+        </View>
+      }
+      ListEmptyComponent={
+        !loading ? (
+          <EmptyState
+            title="No goals to fund"
+            message="Create a savings goal first, then come back to allocate."
+            icon="wallet-outline"
+          />
+        ) : null
+      }
+      renderItem={({ item }) => {
+        const progress =
+          Number(item.target) > 0
+            ? clampPercentage(
+                (Number(item.saved) /
+                  Number(
+                    item.target
+                  )) *
+                  100
+              )
+            : 0;
+
+        return (
+          <TouchableOpacity
+            onPress={() =>
+              setSelectedGoalId(
+                item.id
+              )
+            }
+            style={[
+              styles.goalTouch,
+              {
+                borderColor:
+                  selectedGoalId ===
+                  item.id
+                    ? theme.colors
+                        .primary
+                    : "transparent",
+              },
+            ]}
+          >
+            <Card
+              style={{
+                gap:
+                  theme.spacing.md,
+                backgroundColor:
+                  theme.colors
+                    .surfaceStrong,
+              }}
+            >
+              <Text
+                style={[
+                  theme.typography.h3,
+                  {
+                    color:
+                      theme.colors
+                        .text,
+                  },
+                ]}
+              >
+                {item.title}
+              </Text>
+
+              <ProgressBar
+                progress={progress}
+                valueLabel={`${formatCurrency(
+                  item.saved
+                )} / ${formatCurrency(
+                  item.target
+                )}`}
+              />
+            </Card>
+          </TouchableOpacity>
+        );
+      }}
+    />
+  </ScreenContainer>
+);
 }
 
 const styles = StyleSheet.create({
   screenGap: {
-    flex: 1,
     gap: 16,
   },
   titleWrap: {
@@ -330,9 +368,6 @@ const styles = StyleSheet.create({
   listContent: {
     gap: 12,
     paddingBottom: 12,
-  },
-  list: {
-    flex: 1,
   },
   goalTouch: {
     borderWidth: 1,

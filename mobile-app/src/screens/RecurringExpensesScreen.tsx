@@ -149,255 +149,300 @@ export default function RecurringExpensesScreen() {
   };
 
   return (
-    <ScreenContainer scroll={false}>
-      <View style={styles.screenGap}>
-        <View style={styles.titleWrap}>
-          <Text
-            style={[
-              theme.typography.h1,
-              { color: theme.colors.text },
-            ]}
-          >
-            Recurring Expenses
-          </Text>
-          <Text
-            style={[
-              theme.typography.body,
-              {
-                color:
-                  theme.colors.textMuted,
-              },
-            ]}
-          >
-            Keep subscriptions and monthly
-            obligations organized in one
-            place.
-          </Text>
-        </View>
-
-        <Card
-          style={{
-            gap: theme.spacing.md,
-            backgroundColor:
-              theme.colors.surfaceStrong,
-          }}
-        >
-          <AppInput
-            label="Title"
-            placeholder="Rent, Netflix..."
-            value={title}
-            onChangeText={setTitle}
-          />
-          <AppInput
-            label="Amount"
-            placeholder="0"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-          />
-          <View
-            style={styles.pickerWrap}
-          >
-            <Text
-              style={[
-                theme.typography.caption,
-                styles.pickerLabel,
-                {
-                  color:
-                    theme.colors.textMuted,
-                },
-              ]}
-            >
-              Category
-            </Text>
-            <Picker
-              selectedValue={category}
-              onValueChange={setCategory}
-              dropdownIconColor={
-                theme.colors.text
-              }
-              style={{
-                color: theme.colors.text,
-              }}
-            >
-              {expenseCategories.map(
-                (item) => (
-                  <Picker.Item
-                    key={item}
-                    label={item}
-                    value={item}
-                  />
-                )
-              )}
-            </Picker>
-          </View>
-          <View
-            style={styles.pickerWrap}
-          >
-            <Text
-              style={[
-                theme.typography.caption,
-                styles.pickerLabel,
-                {
-                  color:
-                    theme.colors.textMuted,
-                },
-              ]}
-            >
-              Frequency
-            </Text>
-            <Picker
-              selectedValue={frequency}
-              onValueChange={setFrequency}
-              dropdownIconColor={
-                theme.colors.text
-              }
-              style={{
-                color: theme.colors.text,
-              }}
-            >
-              {recurringFrequencies.map(
-                (item) => (
-                  <Picker.Item
-                    key={item}
-                    label={item}
-                    value={item}
-                  />
-                )
-              )}
-            </Picker>
-          </View>
-          <AppButton
-            label="Add Recurring Expense"
-            onPress={handleCreate}
-            loading={saving}
-          />
-        </Card>
-
-        {error ? (
-          <EmptyState
-            title="Recurring list unavailable"
-            message={error}
-            actionLabel="Reload"
-            onAction={() =>
-              loadExpenses()
-            }
-            icon="warning-outline"
-          />
-        ) : null}
-
-        <FlatList
-          style={styles.list}
-          data={loading ? [] : expenses}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={
-            styles.listContent
+  <ScreenContainer scroll={false}>
+    <FlatList
+      data={loading ? [] : expenses}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{
+        paddingBottom: 32,
+        gap: 12,
+      }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() =>
+            loadExpenses(true)
           }
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() =>
-                loadExpenses(true)
-              }
-              tintColor={theme.colors.primary}
+          tintColor={theme.colors.primary}
+        />
+      }
+      ListHeaderComponent={
+        <View style={{ gap: 16 }}>
+          <View style={styles.titleWrap}>
+            <Text
+              style={[
+                theme.typography.h1,
+                {
+                  color:
+                    theme.colors.text,
+                },
+              ]}
+            >
+              Recurring Expenses
+            </Text>
+
+            <Text
+              style={[
+                theme.typography.body,
+                {
+                  color:
+                    theme.colors
+                      .textMuted,
+                },
+              ]}
+            >
+              Keep subscriptions and monthly
+              obligations organized in one
+              place.
+            </Text>
+          </View>
+
+          <Card
+            style={{
+              gap:
+                theme.spacing.md,
+              backgroundColor:
+                theme.colors
+                  .surfaceStrong,
+            }}
+          >
+            <AppInput
+              label="Title"
+              placeholder="Rent, Netflix..."
+              value={title}
+              onChangeText={setTitle}
             />
-          }
-          ListEmptyComponent={
-            loading ? (
-              <View
-                style={{
-                  gap: theme.spacing.md,
-                }}
-              >
-                {Array.from({
-                  length: 2,
-                }).map((_, index) => (
-                  <Card key={index}>
-                    <SkeletonBlock
-                      height={14}
-                      width="38%"
-                    />
-                    <View style={{ height: 10 }} />
-                    <SkeletonBlock
-                      height={24}
-                      width="52%"
-                    />
-                  </Card>
-                ))}
-              </View>
-            ) : (
-              <EmptyState
-                title="No recurring expenses"
-                message="Add the bills and subscriptions you track every cycle."
-                icon="repeat-outline"
-              />
-            )
-          }
-          renderItem={({ item }) => (
-            <Card
-              style={{
-                gap: theme.spacing.sm,
-                backgroundColor:
-                  theme.colors.surfaceStrong,
-              }}
+
+            <AppInput
+              label="Amount"
+              placeholder="0"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+            />
+
+            <View
+              style={styles.pickerWrap}
             >
-              <View
-                style={styles.rowBetween}
-              >
-                <Text
-                  style={[
-                    theme.typography.h3,
-                    {
-                      color:
-                        theme.colors.text,
-                    },
-                  ]}
-                >
-                  {item.title}
-                </Text>
-                <Text
-                  style={[
-                    theme.typography.bodyStrong,
-                    {
-                      color:
-                        theme.colors.danger,
-                    },
-                  ]}
-                >
-                  {formatCurrency(
-                    item.amount
-                  )}
-                </Text>
-              </View>
               <Text
                 style={[
-                  theme.typography.caption,
+                  theme.typography
+                    .caption,
+                  styles.pickerLabel,
                   {
                     color:
-                      theme.colors.textMuted,
+                      theme.colors
+                        .textMuted,
                   },
                 ]}
               >
-                {item.category} • {item.frequency}
+                Category
               </Text>
-              <AppButton
-                label="Delete"
-                onPress={() =>
-                  handleDelete(item.id)
+
+              <Picker
+                selectedValue={category}
+                onValueChange={
+                  setCategory
                 }
-                variant="ghost"
-              />
-            </Card>
-          )}
-        />
-      </View>
-    </ScreenContainer>
-  );
+                dropdownIconColor={
+                  theme.colors.text
+                }
+                style={{
+                  color:
+                    theme.colors.text,
+                }}
+              >
+                {expenseCategories.map(
+                  (item) => (
+                    <Picker.Item
+                      key={item}
+                      label={item}
+                      value={item}
+                    />
+                  )
+                )}
+              </Picker>
+            </View>
+
+            <View
+              style={styles.pickerWrap}
+            >
+              <Text
+                style={[
+                  theme.typography
+                    .caption,
+                  styles.pickerLabel,
+                  {
+                    color:
+                      theme.colors
+                        .textMuted,
+                  },
+                ]}
+              >
+                Frequency
+              </Text>
+
+              <Picker
+                selectedValue={
+                  frequency
+                }
+                onValueChange={
+                  setFrequency
+                }
+                dropdownIconColor={
+                  theme.colors.text
+                }
+                style={{
+                  color:
+                    theme.colors.text,
+                }}
+              >
+                {recurringFrequencies.map(
+                  (item) => (
+                    <Picker.Item
+                      key={item}
+                      label={item}
+                      value={item}
+                    />
+                  )
+                )}
+              </Picker>
+            </View>
+
+            <AppButton
+              label="Add Recurring Expense"
+              onPress={handleCreate}
+              loading={saving}
+            />
+          </Card>
+
+          {error ? (
+            <EmptyState
+              title="Recurring list unavailable"
+              message={error}
+              actionLabel="Reload"
+              onAction={() =>
+                loadExpenses()
+              }
+              icon="warning-outline"
+            />
+          ) : null}
+        </View>
+      }
+      ListEmptyComponent={
+        loading ? (
+          <View
+            style={{
+              gap:
+                theme.spacing.md,
+            }}
+          >
+            {Array.from({
+              length: 2,
+            }).map((_, index) => (
+              <Card key={index}>
+                <SkeletonBlock
+                  height={14}
+                  width="38%"
+                />
+                <View
+                  style={{
+                    height: 10,
+                  }}
+                />
+                <SkeletonBlock
+                  height={24}
+                  width="52%"
+                />
+              </Card>
+            ))}
+          </View>
+        ) : (
+          <EmptyState
+            title="No recurring expenses"
+            message="Add the bills and subscriptions you track every cycle."
+            icon="repeat-outline"
+          />
+        )
+      }
+      renderItem={({ item }) => (
+        <Card
+          style={{
+            gap:
+              theme.spacing.sm,
+            backgroundColor:
+              theme.colors
+                .surfaceStrong,
+          }}
+        >
+          <View
+            style={
+              styles.rowBetween
+            }
+          >
+            <Text
+              style={[
+                theme.typography.h3,
+                {
+                  color:
+                    theme.colors
+                      .text,
+                },
+              ]}
+            >
+              {item.title}
+            </Text>
+
+            <Text
+              style={[
+                theme.typography
+                  .bodyStrong,
+                {
+                  color:
+                    theme.colors
+                      .danger,
+                },
+              ]}
+            >
+              {formatCurrency(
+                item.amount
+              )}
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              theme.typography
+                .caption,
+              {
+                color:
+                  theme.colors
+                    .textMuted,
+              },
+            ]}
+          >
+            {item.category} •{" "}
+            {item.frequency}
+          </Text>
+
+          <AppButton
+            label="Delete"
+            onPress={() =>
+              handleDelete(
+                item.id
+              )
+            }
+            variant="ghost"
+          />
+        </Card>
+      )}
+    />
+  </ScreenContainer>
+);
 }
 
 const styles = StyleSheet.create({
   screenGap: {
-    flex: 1,
     gap: 16,
   },
   titleWrap: {
@@ -406,9 +451,6 @@ const styles = StyleSheet.create({
   listContent: {
     gap: 12,
     paddingBottom: 32,
-  },
-  list: {
-    flex: 1,
   },
   rowBetween: {
     flexDirection: "row",
