@@ -9,15 +9,38 @@ const createExpense = async (req, res) => {
       date,
     } = req.body;
 
-    const expense = await prisma.expense.create({
-      data: {
-        title,
-        amount: Number(amount),
-        category,
-        date: date ? new Date(date) : undefined,
-        userId: req.user.id,
-      },
-    });
+    const parsedDate =
+      date
+        ? new Date(date)
+        : new Date();
+
+    const existingExpense =
+      await prisma.expense.findFirst({
+        where: {
+          userId: req.user.id,
+          title,
+          amount: Number(amount),
+          date: parsedDate,
+        },
+      });
+
+    if (existingExpense) {
+      return res.status(409).json({
+        message:
+          "Duplicate expense",
+      });
+    }
+
+    const expense =
+      await prisma.expense.create({
+        data: {
+          title,
+          amount: Number(amount),
+          category,
+          date: parsedDate,
+          userId: req.user.id,
+        },
+      });
 
     res.status(201).json(expense);
   } catch (error) {
