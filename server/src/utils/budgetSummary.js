@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const { parseDateRange } = require("./dateRange");
 
 function getCurrentMonthContext() {
   const now = new Date();
@@ -23,14 +24,12 @@ function getCurrentMonthContext() {
 }
 
 async function getMonthlyBudgetSummary(
-  userId
+  userId,
+  query = {}
 ) {
-  const {
-    month,
-    year,
-    startOfMonth,
-    startOfNextMonth,
-  } = getCurrentMonthContext();
+  const { month, year } =
+    getCurrentMonthContext();
+  const { start, end } = parseDateRange(query);
 
   const [
     budget,
@@ -50,8 +49,8 @@ async function getMonthlyBudgetSummary(
       where: {
         userId,
         date: {
-          gte: startOfMonth,
-          lt: startOfNextMonth,
+          gte: start,
+          lte: end,
         },
       },
     }),
@@ -67,9 +66,9 @@ async function getMonthlyBudgetSummary(
     prisma.income.findMany({
       where: {
         userId,
-        createdAt: {
-          gte: startOfMonth,
-          lt: startOfNextMonth,
+        date: {
+          gte: start,
+          lte: end,
         },
       },
     }),

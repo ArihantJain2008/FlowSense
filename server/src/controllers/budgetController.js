@@ -91,12 +91,13 @@ exports.getCurrentBudget =
     }
   };
 
-  exports.getBudgetSummary =
+exports.getBudgetSummary =
   async (req, res) => {
     try {
       const summary =
         await getMonthlyBudgetSummary(
-        req.user.id
+        req.user.id,
+        req.query
       );
 
       res.json(summary);

@@ -1,28 +1,31 @@
 const prisma = require("../lib/prisma");
+const { buildIncomeWhere } = require("../utils/transactionFilters");
+
+function normalizePayload(body = {}) {
+  return {
+    title: body.title,
+    amount: Number(body.amount),
+    source: body.source || null,
+    merchant: body.merchant || null,
+    note: body.note || null,
+    paymentMethod: body.paymentMethod || null,
+    isFavorite: Boolean(body.isFavorite),
+    date: body.date ? new Date(body.date) : new Date(),
+  };
+}
 
 const createIncome = async (req, res) => {
   try {
-    const {
-      title,
-      amount,
-      source,
-      date,
-    } = req.body;
+    const payload = normalizePayload(req.body);
 
-    const parsedDate =
-      date
-        ? new Date(date)
-        : new Date();
-
-    const existingIncome =
-      await prisma.income.findFirst({
-        where: {
-          userId: req.user.id,
-          title,
-          amount: Number(amount),
-          createdAt: parsedDate,
-        },
-      });
+    const existingIncome = await prisma.income.findFirst({
+      where: {
+        userId: req.user.id,
+        title: payload.title,
+        amount: payload.amount,
+        date: payload.date,
+      },
+    });
 
     if (existingIncome) {
       return res.status(409).json({
@@ -30,16 +33,12 @@ const createIncome = async (req, res) => {
       });
     }
 
-    const income =
-      await prisma.income.create({
-        data: {
-          title,
-          amount: Number(amount),
-          source,
-          createdAt: parsedDate,
-          userId: req.user.id,
-        },
-      });
+    const income = await prisma.income.create({
+      data: {
+        ...payload,
+        userId: req.user.id,
+      },
+    });
 
     res.status(201).json(income);
   } catch (error) {
@@ -51,15 +50,12 @@ const createIncome = async (req, res) => {
 
 const getIncome = async (req, res) => {
   try {
-    const incomes =
-      await prisma.income.findMany({
-        where: {
-          userId: req.user.id,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+    const incomes = await prisma.income.findMany({
+      where: buildIncomeWhere(req.user.id, req.query),
+      orderBy: {
+        date: "desc",
+      },
+    });
 
     res.json(incomes);
   } catch (error) {
@@ -71,20 +67,12 @@ const getIncome = async (req, res) => {
 
 const updateIncome = async (req, res) => {
   try {
-    const {
-      title,
-      amount,
-      source,
-      date,
-    } = req.body;
-
-    const existingIncome =
-      await prisma.income.findFirst({
-        where: {
-          id: req.params.id,
-          userId: req.user.id,
-        },
-      });
+    const existingIncome = await prisma.income.findFirst({
+      where: {
+        id: req.params.id,
+        userId: req.user.id,
+      },
+    });
 
     if (!existingIncome) {
       return res.status(404).json({
@@ -92,20 +80,18 @@ const updateIncome = async (req, res) => {
       });
     }
 
-    const income =
-      await prisma.income.update({
-        where: {
-          id: existingIncome.id,
-        },
-        data: {
-          title,
-          amount: Number(amount),
-          source,
-          createdAt: date
-            ? new Date(date)
-            : existingIncome.createdAt,
-        },
-      });
+    const payload = normalizePayload({
+      ...existingIncome,
+      ...req.body,
+      isFavorite: req.body.isFavorite ?? existingIncome.isFavorite,
+    });
+
+    const income = await prisma.income.update({
+      where: {
+        id: existingIncome.id,
+      },
+      data: payload,
+    });
 
     res.json(income);
   } catch (error) {
@@ -117,13 +103,12 @@ const updateIncome = async (req, res) => {
 
 const deleteIncome = async (req, res) => {
   try {
-    const existingIncome =
-      await prisma.income.findFirst({
-        where: {
-          id: req.params.id,
-          userId: req.user.id,
-        },
-      });
+    const existingIncome = await prisma.income.findFirst({
+      where: {
+        id: req.params.id,
+        userId: req.user.id,
+      },
+    });
 
     if (!existingIncome) {
       return res.status(404).json({

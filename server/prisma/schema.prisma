@@ -13,6 +13,9 @@ model User {
   name      String
   email     String   @unique
   password  String
+  themePreference String @default("system")
+  currency String @default("INR")
+  notificationSettings Json?
 
   expenses  Expense[]
   budgets   Budget[]
@@ -20,6 +23,9 @@ model User {
   incomes   Income[]
   savingsGoals SavingsGoal[]
   savingsAllocationBatches SavingsAllocationBatch[]
+  categoryRules CategoryRule[]
+  monthlySnapshots MonthlySnapshot[]
+  expenseTemplates ExpenseTemplate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -32,6 +38,12 @@ model Expense {
   amount      Float
 
   category    String
+  merchant    String?
+  note        String?
+  paymentMethod String?
+  isFavorite  Boolean @default(false)
+  isRecurringGenerated Boolean @default(false)
+  importConfidence Float?
 
   date        DateTime @default(now())
 
@@ -40,6 +52,12 @@ model Expense {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recurringExpenseId String?
+  recurringExpense RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([userId, category])
+  @@index([userId, isFavorite])
 }
 
 model Budget {
@@ -62,13 +80,23 @@ model RecurringExpense {
   title       String
   amount      Float
   category    String
+  merchant    String?
+  note        String?
+  paymentMethod String?
 
   frequency   String
+  startDate   DateTime @default(now())
+  nextRunAt   DateTime @default(now())
+  lastGeneratedAt DateTime?
+  isActive    Boolean @default(true)
+  dayOfMonth  Int?
+  dayOfWeek   Int?
 
   createdAt   DateTime @default(now())
 
   userId      String
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedExpenses Expense[]
 }
 
 model SavingsGoal {
@@ -77,6 +105,8 @@ model SavingsGoal {
   title     String
   target    Float
   saved     Float @default(0)
+  monthlyContribution Float @default(0)
+  targetDate DateTime?
 
   createdAt DateTime @default(now())
 
@@ -118,9 +148,76 @@ model Income {
   amount      Float
 
   source      String?
+  note        String?
+  merchant    String?
+  paymentMethod String?
+  isFavorite  Boolean @default(false)
+  date        DateTime @default(now())
 
   createdAt   DateTime @default(now())
 
   userId      String
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, isFavorite])
+}
+
+model ExpenseTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  title       String
+  amount      Float
+  category    String
+  merchant    String?
+  note        String?
+  paymentMethod String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model CategoryRule {
+  id          String   @id @default(uuid())
+  pattern     String
+  normalizedMerchant String
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pattern])
+}
+
+model MonthlySnapshot {
+  id        String   @id @default(uuid())
+  month     Int
+  year      Int
+  income    Float
+  expenses  Float
+  savings   Float
+  budget    Float
+  budgetUsage Float
+  savingsRate Float
+  largestExpenseTitle String?
+  largestExpenseAmount Float?
+  topCategory String?
+  topCategoryAmount Float?
+  comparisonIncome Float?
+  comparisonExpenses Float?
+  comparisonSavings Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
 }

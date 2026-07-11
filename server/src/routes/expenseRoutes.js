@@ -7,6 +7,7 @@ const {
   getExpenses,
   updateExpense,
   deleteExpense,
+  importExpenses,
   getAnalytics
 } = require("../controllers/expenseController");
 
@@ -22,6 +23,8 @@ router.get(
 router.route("/")
   .post(createExpense)
   .get(getExpenses);
+
+router.post("/import", importExpenses);
 
 router.route("/:id")
   .put(updateExpense)
