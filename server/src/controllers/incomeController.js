@@ -18,21 +18,6 @@ const createIncome = async (req, res) => {
   try {
     const payload = normalizePayload(req.body);
 
-    const existingIncome = await prisma.income.findFirst({
-      where: {
-        userId: req.user.id,
-        title: payload.title,
-        amount: payload.amount,
-        date: payload.date,
-      },
-    });
-
-    if (existingIncome) {
-      return res.status(409).json({
-        message: "Duplicate income",
-      });
-    }
-
     const income = await prisma.income.create({
       data: {
         ...payload,

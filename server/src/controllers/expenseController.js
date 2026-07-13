@@ -187,21 +187,6 @@ const createExpense = async (req, res) => {
   try {
     const payload = normalizePayload(req.body);
 
-    const existingExpense = await prisma.expense.findFirst({
-      where: {
-        userId: req.user.id,
-        title: payload.title,
-        amount: payload.amount,
-        date: payload.date,
-      },
-    });
-
-    if (existingExpense) {
-      return res.status(409).json({
-        message: "Duplicate expense",
-      });
-    }
-
     const expense = await prisma.expense.create({
       data: {
         ...payload,
@@ -281,20 +266,6 @@ const importExpenses = async (req, res) => {
       const classification = await resolveExpenseClassification(req.user.id, row.title, row.merchant, row.category);
       const finalMerchant = row.correctedMerchant || row.merchant || classification.merchant || null;
       const finalCategory = row.correctedCategory || row.category || classification.category;
-
-      const existingExpense = await prisma.expense.findFirst({
-        where: {
-          userId: req.user.id,
-          title: classification.title,
-          amount: row.amount,
-          date: row.date,
-        },
-      });
-
-      if (existingExpense) {
-        skippedTransactions.push(row);
-        continue;
-      }
 
       const expense = await prisma.expense.create({
         data: {
