@@ -99,6 +99,7 @@ export default function ExpensesScreen() {
   const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null);
   const [editingDraft, setEditingDraft] = useState<ExpenseFormState>(defaultExpenseFormState);
   const [templates, setTemplates] = useState<ExpenseTemplateItem[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ExpenseTemplateItem | null>(null);
   const [editingTemplateDraft, setEditingTemplateDraft] = useState<ExpenseTemplateFormState>(defaultExpenseTemplateFormState);
 
@@ -135,10 +136,13 @@ export default function ExpensesScreen() {
 
   const loadTemplates = useCallback(async () => {
     try {
+      setTemplatesLoading(true);
       const data = await getExpenseTemplates();
       setTemplates(data);
     } catch {
       setTemplates([]);
+    } finally {
+      setTemplatesLoading(false);
     }
   }, []);
 
@@ -480,7 +484,23 @@ export default function ExpensesScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {templates.length > 0 ? (
+              {templatesLoading ? (
+                <View style={styles.templateSection}>
+                  <View style={styles.templateHeaderRow}>
+                    <SkeletonBlock height={18} width="42%" />
+                    <SkeletonBlock height={34} width={92} radius={999} />
+                  </View>
+                  <View style={styles.templateList}>
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <View key={`expense-template-skeleton-${index}`} style={styles.templateChip}>
+                        <SkeletonBlock height={14} width="66%" />
+                        <SkeletonBlock height={12} width="84%" />
+                        <SkeletonBlock height={12} width="42%" />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : templates.length > 0 ? (
                 <View style={styles.templateSection}>
                   <View style={styles.templateHeaderRow}>
                     <Text style={[theme.typography.h3, { color: theme.colors.text }]}>Favorite Templates</Text>
@@ -524,7 +544,16 @@ export default function ExpensesScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {editingTemplate ? (
+              {templatesLoading ? (
+                <View style={{ gap: theme.spacing.md }}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <View key={`expense-template-editor-skeleton-${index}`} style={{ gap: 8 }}>
+                      <SkeletonBlock height={12} width="34%" />
+                      <SkeletonBlock height={48} width="100%" />
+                    </View>
+                  ))}
+                </View>
+              ) : editingTemplate ? (
                 <View style={{ gap: theme.spacing.md }}>
                   <AppInput
                     label="Template Name"

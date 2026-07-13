@@ -65,23 +65,14 @@ export default function ImportTransactionsScreen() {
       let skippedCount = 0;
 
       for (const transaction of incomeRows) {
-        try {
-          await createIncome({
-            title: transaction.title,
-            amount: transaction.amount,
-            source: "Imported",
-            date: transaction.date,
-          });
+        await createIncome({
+          title: transaction.title,
+          amount: transaction.amount,
+          source: "Imported",
+          date: transaction.date,
+        });
 
-          importedCount += 1;
-        } catch (error: any) {
-          if (error?.response?.status === 409) {
-            skippedCount += 1;
-            continue;
-          }
-
-          throw error;
-        }
+        importedCount += 1;
       }
 
       if (expenseRows.length > 0) {

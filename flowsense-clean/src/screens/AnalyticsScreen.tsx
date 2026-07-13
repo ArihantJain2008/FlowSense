@@ -166,32 +166,42 @@ export default function AnalyticsScreen() {
 
   return (
     <ScreenContainer scroll={false}>
-      <View style={styles.screenGap}>
-        <View style={styles.titleWrap}>
-          <Text style={[theme.typography.h1, { color: theme.colors.text }]}>Analytics</Text>
-          <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>See where your money goes and how it changes over time.</Text>
-        </View>
-
-        <PeriodFilterBar />
-
-        {error ? (
-          <EmptyState title="Analytics unavailable" message={error} actionLabel="Reload" onAction={() => {
-            void loadAnalytics();
-          }} icon="warning-outline" />
-        ) : null}
-
-        <FlatList
-          style={styles.list}
-          data={loading ? [] : categories}
-          keyExtractor={(item) => item.category}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => {
+      <FlatList
+        style={styles.list}
+        data={loading ? [] : categories}
+        keyExtractor={(item) => item.category}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
               void loadAnalytics(true);
-            }} tintColor={theme.colors.primary} />
-          }
-          ListHeaderComponent={
-            loading ? (
+            }}
+            tintColor={theme.colors.primary}
+          />
+        }
+        ListHeaderComponent={
+          <View style={styles.screenGap}>
+            <View style={styles.titleWrap}>
+              <Text style={[theme.typography.h1, { color: theme.colors.text }]}>Analytics</Text>
+              <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>See where your money goes and how it changes over time.</Text>
+            </View>
+
+            <PeriodFilterBar />
+
+            {error ? (
+              <EmptyState
+                title="Analytics unavailable"
+                message={error}
+                actionLabel="Reload"
+                onAction={() => {
+                  void loadAnalytics();
+                }}
+                icon="warning-outline"
+              />
+            ) : null}
+
+            {loading ? (
               <View style={{ gap: 12 }}>
                 <View style={styles.statsGrid}>
                   {Array.from({ length: 4 }).map((_, index) => (
@@ -325,35 +335,34 @@ export default function AnalyticsScreen() {
 
                 <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Category Breakdown</Text>
               </View>
-            )
-          }
-          renderItem={({ item, index }) => {
-            const percentage = analytics?.totalExpenses ? (Number(item.amount) / analytics.totalExpenses) * 100 : 0;
+            )}
+          </View>
+        }
+        renderItem={({ item, index }) => {
+          const percentage = analytics?.totalExpenses ? (Number(item.amount) / analytics.totalExpenses) * 100 : 0;
 
-            return (
-              <Card style={{ backgroundColor: theme.colors.surfaceStrong, gap: theme.spacing.sm }}>
-                <View style={styles.rowBetween}>
-                  <View style={styles.metaRow}>
-                    <View style={[styles.colorDot, { backgroundColor: chartPalette[index % chartPalette.length] }]} />
-                    <Text style={[theme.typography.bodyStrong, { color: theme.colors.text }]}>{item.category}</Text>
-                  </View>
-                  <Text style={[theme.typography.bodyStrong, { color: theme.colors.text }]}>{formatMoney(item.amount)}</Text>
+          return (
+            <Card style={{ backgroundColor: theme.colors.surfaceStrong, gap: theme.spacing.sm }}>
+              <View style={styles.rowBetween}>
+                <View style={styles.metaRow}>
+                  <View style={[styles.colorDot, { backgroundColor: chartPalette[index % chartPalette.length] }]} />
+                  <Text style={[theme.typography.bodyStrong, { color: theme.colors.text }]}>{item.category}</Text>
                 </View>
-                <Text style={[theme.typography.caption, { color: theme.colors.textMuted }]}>
-                  {percentage.toFixed(1)}% of spending
-                </Text>
-              </Card>
-            );
-          }}
-        />
-      </View>
+                <Text style={[theme.typography.bodyStrong, { color: theme.colors.text }]}>{formatMoney(item.amount)}</Text>
+              </View>
+              <Text style={[theme.typography.caption, { color: theme.colors.textMuted }]}>
+                {percentage.toFixed(1)}% of spending
+              </Text>
+            </Card>
+          );
+        }}
+      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   screenGap: {
-    flex: 1,
     gap: 16,
   },
   titleWrap: {
